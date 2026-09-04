@@ -1,0 +1,23 @@
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+secrets/
+firmware/nodemcu_wifi_test/include/wifi_secrets.h
+*.pem
+*.key
+
+# Editors and operating systems
+.claude/settings.local.json
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Build artifacts and caches
+.pio/
+build/
+dist/
+__pycache__/
+*.py[cod]
+node_modules/
