@@ -195,9 +195,10 @@ El prototipo disponible en `firmware/nodemcu_wifi_test` utiliza un NodeMCU V3 co
 ESP8266. Crea una red Wi-Fi local, expone una interfaz web de control y puede mostrar
 el ultimo comando en una pantalla LCD 1602 I2C.
 
-Las credenciales del punto de acceso se configuran localmente mediante
-`include/wifi_secrets.h`. Ese archivo esta excluido de Git; el repositorio solo
-incluye una plantilla segura.
+La contraseña usada por este prototipo era solamente una credencial de prueba para
+la red local creada por el ESP8266; no forma parte del diseño de autenticacion de
+AURA Watch. Actualmente se mantiene en `include/wifi_secrets.h`, fuera de Git, y
+se incluye una plantilla para poder reproducir la prueba sin versionar contraseñas.
 
 ## Seguridad y secretos
 

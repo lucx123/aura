@@ -2,6 +2,8 @@
 
 Este firmware no usa BLE. El NodeMCU V3 habitual contiene un ESP8266, que solo
 ofrece Wi-Fi. La placa crea su propia red para que la prueba no dependa del router.
+La clave de esa red es exclusivamente de testeo y este prototipo no representa el
+sistema de autenticacion definitivo de AURA Watch.
 
 ## Cargar desde VS Code
 
