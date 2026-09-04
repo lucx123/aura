@@ -3,11 +3,15 @@
 ## Objetivo
 
 Interaccion natural por voz. Aura debe:
-- Escuchar continuamente esperando wake word
+- Detectar localmente la wake word sin enviar audio continuamente
 - Entender lenguaje natural en español (y ingles)
 - Responder con voz natural y expresiva
 - Detectar tono emocional del usuario
 - Funcionar con baja latencia (<2 segundos end-to-end)
+
+Este pipeline se aplicara tanto a **AURA Watch (ESP32-S3)** como a **AURA
+Desktop**. Ambos comparten voz e identidad, pero pueden usar distinto hardware y
+delegar procesamiento pesado al telefono, gateway u orquestador.
 
 ## Pipeline de voz completo
 
@@ -31,6 +35,11 @@ Interaccion natural por voz. Aura debe:
 ```
 
 ## Wake Word (deteccion local)
+
+La palabra inicial sera **"Aura"** u **"Oye Aura"**, configurable por el usuario.
+Si varios nodos detectan la misma activacion, anuncian `wake_detected` al gateway;
+este elige un unico nodo principal usando proximidad, confianza, disponibilidad y
+preferencias. Los demas nodos permanecen en silencio.
 
 ### Picovoice Porcupine (RECOMENDADO)
 - Custom wake words ("Hey Aura", "Aura")
@@ -108,6 +117,7 @@ Interaccion natural por voz. Aura debe:
 ## Hardware de audio
 
 ### Microfonos
+- Microfono I2S integrado al ESP32-S3 de AURA Watch
 - ReSpeaker 2-Mic Array HAT (RPi): $10, deteccion direccional
 - ReSpeaker 4-Mic Array: $25, mejor cancelacion de ruido
 - INMP441 I2S (ESP32): $2, mic digital directo
@@ -140,3 +150,6 @@ Interaccion natural por voz. Aura debe:
 - [ ] Interrupcion: si el usuario habla, Aura deja de hablar inmediatamente
 - [ ] Emotion detection en voz del usuario (librerias: SER, openSMILE)
 - [ ] Audio spatialization - si hay 2 speakers, voz viene de la "cara"
+- [ ] Consumo real de wake word continuo en el ESP32-S3 con bateria
+- [ ] Arbitraje de wake word entre reloj, app y robot
+- [ ] Cuando usar Wi-Fi directo y cuando usar la app como puente BLE

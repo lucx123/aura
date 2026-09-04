@@ -23,8 +23,10 @@ Basado en investigacion de 12+ proyectos similares.
 | **Comms WhatsApp** | Baileys | Evolution API | Directo, JS library |
 | **Comms Email** | Gmail API | - | OAuth, confiable |
 | **Comms Admin** | Telegram Bot API | - | Gratis, push notifications |
-| **Hardware face** | ESP32 + GC9A01 TFT | - | Ya decidido |
-| **ESP32 comms** | WebSocket | MQTT | Bidi real-time para face sync |
+| **AURA Watch** | Waveshare ESP32-S3-Touch-AMOLED-2.06 | - | Comprada; plataforma confirmada |
+| **Watch enlace local** | BLE con app movil | - | Provisioning, control y bajo consumo |
+| **Watch enlace directo** | Wi-Fi + WebSocket | MQTT | Audio, eventos, OTA y gateway directo |
+| **AURA Desktop** | Por definir | ESP32-S3/RPi | Robot futuro con vision y movimiento |
 | **Backend** | Python FastAPI | - | Async, rapido, ecosystem ML |
 | **Infra** | EC2 t3.small + Docker | Laptop local | Tailscale VPN entre ambos |
 | **CI/CD** | GitHub Actions | - | Auto-deploy on push |

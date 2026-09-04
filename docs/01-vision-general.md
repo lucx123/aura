@@ -2,8 +2,16 @@
 
 ## Que es Aura
 
-Un asistente AI con presencia fisica que interactua con el mundo real.
-No es solo un chatbot - es una entidad que percibe, responde y tiene "personalidad".
+**A.U.R.A. — Adaptive Unified Reasoning Assistant** es una inteligencia personal
+distribuida con presencia digital y fisica. No es solo un chatbot ni pertenece a
+un unico aparato: mantiene identidad, memoria y contexto entre sus distintos nodos.
+
+Sus dos manifestaciones fisicas principales son:
+
+- **AURA Watch:** reloj completo sobre ESP32-S3, con voz, wake word, pantalla,
+  BLE, Wi-Fi, avisos y comunicacion proactiva.
+- **AURA Desktop:** futuro robot de escritorio con voz, camara, expresiones,
+  movimiento e interaccion con el entorno.
 
 ## Pilares del proyecto
 
@@ -25,7 +33,8 @@ No es solo un chatbot - es una entidad que percibe, responde y tiene "personalid
 - Control de dispositivos (luces, musica, etc.)
 
 ### 4. Presencia (cuerpo)
-- Cara animada que reacciona
+- Reloj ESP32-S3 que acompaña e informa al usuario
+- Robot de escritorio con cara animada que reacciona
 - Indicadores visuales de estado (escuchando, pensando, hablando)
 - Posiblemente un cuerpo/estructura fisica
 
@@ -34,5 +43,6 @@ No es solo un chatbot - es una entidad que percibe, responde y tiene "personalid
 - Aura debe sentirse VIVA, no como un comando de terminal
 - Debe tener personalidad consistente
 - Debe ser proactiva (no solo responder, tambien iniciar)
+- Cada accion autonoma debe respetar permisos proporcionales a su riesgo
 - Debe respetar privacidad (modo "no molestar", no grabar siempre)
 - Debe ser util IRL, no solo un gadget cool

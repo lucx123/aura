@@ -12,10 +12,11 @@
 **A.U.R.A.** significa **Adaptive Unified Reasoning Assistant** — en español,
 **Asistente Unificado de Razonamiento Adaptativo**.
 
-AURA es un proyecto para construir un asistente personal tipo Jarvis que no viva
-solamente dentro de una ventana de chat. La meta es que pueda escuchar, hablar,
-ver su entorno, recordar informacion relevante, comunicarse mediante distintos
-canales y, con el tiempo, interactuar con el mundo fisico.
+AURA es una inteligencia personal distribuida que no vive solamente dentro de una
+ventana de chat. Comparte identidad, memoria y contexto entre dispositivos fisicos
+y canales digitales. Su primera presencia portatil sera **AURA Watch**, montado
+sobre una **Waveshare ESP32-S3-Touch-AMOLED-2.06**; en una fase posterior,
+**AURA Desktop** le dara un cuerpo robotico con vision y movimiento.
 
 No busca ser solo otro chatbot. AURA aspira a convertirse en una presencia digital
 continua: contextual, multimodal, extensible y bajo el control de su usuario.
@@ -25,11 +26,13 @@ continua: contextual, multimodal, extensible y bajo el control de su usuario.
 AURA deberia poder:
 
 - conversar por voz de forma natural y con baja latencia;
+- despertar localmente al escuchar "Aura" u otra wake word configurable;
 - mantener una identidad y personalidad coherentes;
 - recordar preferencias, decisiones, personas y acontecimientos importantes;
 - comprender el entorno mediante camaras y otros sensores;
-- comunicarse por WhatsApp, correo y telefono;
+- comunicarse por WhatsApp, Telegram, Discord, correo y telefono;
 - ayudar con tareas cotidianas y automatizaciones;
+- informar, recordar y avisar de forma proactiva desde el reloj o el robot;
 - mostrar expresiones mediante una cara LED o pantalla;
 - controlar hardware y, eventualmente, una plataforma fisica;
 - continuar funcionando de forma degradada cuando un servicio externo falle;
@@ -53,31 +56,26 @@ AURA deberia poder:
 ## Arquitectura conceptual
 
 ```text
-                  ┌──────────────────────────┐
-                  │         Usuario          │
-                  └────────────┬─────────────┘
-                               │
-             ┌─────────────────┼─────────────────┐
-             │                 │                 │
-          Voz/audio        Vision/sensores   Mensajeria
-             │                 │                 │
-             └─────────────────┼─────────────────┘
-                               ▼
-                  ┌──────────────────────────┐
-                  │   Orquestador de AURA    │
-                  │ contexto · herramientas  │
-                  │ decisiones · seguridad   │
-                  └───────┬──────────┬───────┘
-                          │          │
-                  ┌───────▼───┐  ┌───▼──────────┐
-                  │ Modelos AI│  │ aura-memory  │
-                  │local/cloud│  │ memoria      │
-                  └───────┬───┘  └──────────────┘
-                          │
-                  ┌───────▼──────────────────┐
-                  │ Servicios y mundo fisico │
-                  │ APIs · ESP8266 · displays│
-                  └──────────────────────────┘
+ ┌─────────────┐   ┌──────────────┐   ┌─────────────────────────┐
+ │ AURA Watch  │   │ AURA Desktop │   │ WhatsApp/Telegram/      │
+ │ ESP32-S3    │   │ robot, camara│   │ Discord/app movil       │
+ │ Wi-Fi y voz │   │ movimiento   │   │                         │
+ └──────┬──────┘   └──────┬───────┘   └───────────┬─────────────┘
+        └─────────────────┼────────────────────────┘
+                          ▼
+                 ┌──────────────────┐
+                 │ AURA Gateway API │
+                 └────────┬─────────┘
+                          ▼
+             ┌─────────────────────────┐
+             │ Orquestador reemplazable│
+             │ Hermes/OpenClaw/futuro  │
+             └────────┬────────┬───────┘
+                      │        │
+              ┌───────▼───┐ ┌──▼───────────┐
+              │ Modelos AI│ │ aura-memory  │
+              │Claude/Gem.│ │ contexto     │
+              └───────────┘ └──────────────┘
 ```
 
 La arquitectura definitiva todavia esta en investigacion. Los documentos del
@@ -98,6 +96,7 @@ Actualmente hay:
 - diseño conceptual del sistema de memoria;
 - una lista de compras organizada por fases;
 - un primer prototipo de firmware para NodeMCU ESP8266 con interfaz web y LCD I2C.
+- una arquitectura definida para AURA Watch, AURA Desktop y coordinacion de voz.
 
 ## Roadmap
 
@@ -113,7 +112,7 @@ restricciones.
 - [ ] Consolidar requisitos y decisiones en una arquitectura v1.
 - [ ] Definir criterios de privacidad, permisos y retencion de datos.
 
-### Fase 1 — Nucleo conversacional
+### Fase 1 — Nucleo, memoria y canales
 
 - [ ] Crear el orquestador principal.
 - [ ] Integrar entrada y salida de voz en streaming.
@@ -121,35 +120,46 @@ restricciones.
 - [ ] Conectar uno o mas modelos con failover local/cloud.
 - [ ] Definir personalidad, instrucciones y limites de AURA.
 - [ ] Integrar lectura y escritura controlada con `aura-memory`.
+- [ ] Unificar Telegram, Discord y WhatsApp mediante adaptadores de canal.
+- [ ] Crear AURA Gateway API para desacoplar dispositivos y orquestador.
 
-### Fase 2 — Presencia visual
+### Fase 2 — AURA Watch + aplicacion movil
 
-- [ ] Diseñar la cara o interfaz visual de AURA.
-- [ ] Sincronizar expresiones con voz, estado y emociones simuladas.
-- [ ] Conectar una pantalla o matriz LED al nucleo.
-- [ ] Crear estados visuales para escucha, pensamiento, respuesta y error.
+- [x] Adquirir la Waveshare ESP32-S3-Touch-AMOLED-2.06.
+- [x] Definir pantalla AMOLED tactil, IMU, RTC, audio, microSD y gestion de energia.
+- [ ] Recibir la placa, verificar revision, pinout y perifericos reales.
+- [ ] Integrar microfono, altavoz, bateria y vibracion.
+- [ ] Crear interfaz de reloj, ojos, estados, avisos y recordatorios.
+- [ ] Implementar BLE para emparejamiento, configuracion y enlace con la app.
+- [ ] Implementar Wi-Fi para gateway directo, audio y actualizaciones OTA.
+- [ ] Detectar la wake word localmente y activar la conversacion.
+- [ ] Crear la app movil como puente BLE/Internet y superficie de permisos.
 
-### Fase 3 — Vision y contexto ambiental
+### Fase 3 — Voz distribuida y proactividad
 
-- [ ] Integrar una camara de prueba.
-- [ ] Detectar objetos, personas y eventos relevantes.
-- [ ] Aplicar reglas de privacidad y activacion visible de la camara.
-- [ ] Incorporar contexto visual sin almacenar video innecesario.
+- [ ] Compartir conversaciones y contexto entre reloj, app, robot y canales.
+- [ ] Coordinar que solo el nodo mas apropiado responda a cada wake word.
+- [ ] Añadir interrupcion de voz, prioridades y modo no molestar.
+- [ ] Implementar avisos proactivos por voz, pantalla y vibracion.
+- [ ] Aplicar niveles de autonomia segun el riesgo de cada accion.
 
-### Fase 4 — Comunicaciones y acciones
+### Fase 4 — AURA Desktop
 
-- [ ] Integrar WhatsApp y correo electronico.
-- [ ] Experimentar con llamadas telefonicas y modo secretaria.
-- [ ] Implementar herramientas, permisos y confirmaciones por nivel de riesgo.
-- [ ] Añadir automatizaciones y notificaciones proactivas.
+- [ ] Construir rostro expresivo, microfonos, altavoz y sensores de presencia.
+- [ ] Integrar camara con indicadores y controles visibles de privacidad.
+- [ ] Añadir pan-tilt, seguimiento visual y movimientos expresivos.
+- [ ] Compartir la misma identidad, memoria y voz de AURA Watch.
+- [ ] Interactuar con dispositivos y objetos autorizados del entorno.
 
-### Fase 5 — Cuerpo y autonomia fisica
+### Fase 5 — Autonomia y entorno fisico
 
 - [ ] Consolidar el bus de comunicacion con microcontroladores.
 - [ ] Añadir sensores y actuadores de forma incremental.
 - [ ] Diseñar alimentacion, conectividad y carcasa.
 - [ ] Evaluar movilidad, seguridad fisica y parada de emergencia.
 - [ ] Construir un prototipo integrado de AURA.
+- [ ] Integrar hogar inteligente y automatizaciones contextuales.
+- [ ] Evaluar base movil o actuadores adicionales con limites de seguridad.
 
 ## Estructura del repositorio
 
@@ -163,6 +173,11 @@ restricciones.
 ```
 
 Los directorios planificados apareceran cuando comience su implementacion.
+
+La arquitectura de nodos, voz y autonomia se detalla en
+[`docs/12-arquitectura-nodos-aura.md`](docs/12-arquitectura-nodos-aura.md).
+La ficha de la placa adquirida esta en
+[`docs/13-aura-watch-hardware.md`](docs/13-aura-watch-hardware.md).
 
 ## Repositorios relacionados
 

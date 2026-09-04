@@ -1,13 +1,37 @@
-# Presencia Fisica - Darle "Vida" a Aura
+# Presencia Fisica - AURA Watch y AURA Desktop
 
 ## Concepto central
 
-Aura necesita un cuerpo minimo para que se sienta como una entidad presente
-en el espacio, no solo una voz incorpórea.
+AURA se manifiesta mediante varios nodos que comparten identidad, memoria y
+contexto. La primera presencia fisica sera **AURA Watch**, basada en la Waveshare
+ESP32-S3-Touch-AMOLED-2.06. En el futuro, **AURA Desktop** añadira una presencia robotica con
+camara, movimiento e interaccion ambiental.
+
+## AURA Watch - primera presencia
+
+El reloj integra en el ESP32-S3:
+
+- pantalla con hora, ojos, estados, recordatorios y alertas;
+- wake word local ("Aura" u otra configurable);
+- microfono, salida de audio y vibracion;
+- BLE para la app movil, configuracion y eventos de bajo consumo;
+- Wi-Fi para conexion directa, audio, sincronizacion y OTA;
+- capacidad de hablar, informar, recordar y avisar proactivamente.
+
+El reloj es un nodo completo, aunque delega STT, TTS o razonamiento pesado al
+telefono o al orquestador cuando sea necesario. Ver
+[`12-arquitectura-nodos-aura.md`](12-arquitectura-nodos-aura.md) y la ficha
+[`13-aura-watch-hardware.md`](13-aura-watch-hardware.md).
+
+## AURA Desktop - robot futuro
+
+El robot de escritorio reutilizara el mismo nucleo de AURA y añadira rostro,
+microfonos, altavoz, camara con controles de privacidad, sensores y movimiento.
+Las opciones siguientes corresponden principalmente a este nodo.
 
 ## Opciones de "cara"
 
-### Opcion A: Pantalla TFT circular (RECOMENDADA para empezar)
+### Opcion A: Pantalla TFT circular
 
 - Display: GC9A01 1.28" circular 240x240px
 - Controlador: ESP32
@@ -47,7 +71,7 @@ Expresiones posibles:
 
 ## Cuerpo / Estructura
 
-### Concepto minimalista (recomendado fase 1)
+### Concepto minimalista para el primer AURA Desktop
 - Base cilindrica o esferica (impresion 3D o comprada)
 - Pantalla como "cara" al frente
 - Speaker integrado o debajo
