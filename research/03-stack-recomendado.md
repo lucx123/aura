@@ -8,7 +8,7 @@ Basado en investigacion de 12+ proyectos similares.
 
 | Capa | Herramienta | Alternativa/Backup | Razon |
 |------|-------------|-------------------|-------|
-| **Orquestador** | Claude Haiku (Bedrock Converse API) | Gemini Flash | Barato, rapido, buen tool use |
+| **Orquestador** | Hermes (registrado en EC2) | OpenClaw u otro | Reemplazable mediante adaptador |
 | **Cerebro** | Claude Sonnet (Bedrock) | Gemini Pro | Conversacion principal |
 | **Heavy thinking** | Claude Opus (Bedrock) | - | Solo cuando es necesario |
 | **STT** | RealtimeSTT (faster_whisper) | Deepgram API | Local, gratis, buena calidad |
@@ -25,6 +25,8 @@ Basado en investigacion de 12+ proyectos similares.
 | **Comms Admin** | Telegram Bot API | - | Gratis, push notifications |
 | **AURA Watch** | Waveshare ESP32-S3-Touch-AMOLED-2.06 | - | Comprada; plataforma confirmada |
 | **Watch enlace local** | BLE con app movil | - | Provisioning, control y bajo consumo |
+| **App propia Android** | Kotlin + Jetpack Compose (propuesto) | Por evaluar | Asociación, reconexión y puente a EC2 |
+| **BLE Android** | CompanionDeviceManager + CompanionDeviceService | Servicio connectedDevice | Vinculación y presencia en segundo plano |
 | **Watch enlace directo** | Wi-Fi + WebSocket | MQTT | Audio, eventos, OTA y gateway directo |
 | **AURA Desktop** | Por definir | ESP32-S3/RPi | Robot futuro con vision y movimiento |
 | **Backend** | Python FastAPI | - | Async, rapido, ecosystem ML |

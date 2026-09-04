@@ -91,11 +91,14 @@ entre en bajo consumo. Esto es util para:
 
 ### Conectividad
 
-- **BLE:** app movil, aprovisionamiento, configuracion, eventos y puente de Internet.
+- **BLE:** app Android propia, configuración, eventos y puente a EC2; audio
+  comprimido por turnos pendiente de pruebas.
 - **Wi-Fi:** AURA Gateway directo, audio, recursos, sincronizacion y OTA.
 
 Ambas radios comparten recursos de 2.4 GHz. Se deben medir latencia, consumo y
 estabilidad antes de mantener trafico simultaneo prolongado.
+
+Ver [diseño de la app y los transportes](14-app-android-conectividad.md).
 
 ## Arquitectura inicial de firmware
 

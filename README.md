@@ -84,6 +84,22 @@ se validan.
 
 ## Estado actual
 
+### App Android y conexión del reloj
+
+La app propia de AURA (pendiente de desarrollo) permitirá asociar el reloj como un
+smartwatch: vincular una vez, reconectar al acercarse y recibir avisos sin abrirla
+en cada interacción. Se propone Kotlin + Jetpack Compose y las APIs de dispositivos
+asociados de Android.
+
+Ruta habitual: **Watch → BLE → app Android → Internet → AURA Gateway en EC2**.
+Como segunda ruta, el Watch podrá conectarse por Wi-Fi directamente al gateway.
+La voz por BLE se probará inicialmente por turnos con audio comprimido; la charla
+continua y la autonomía de batería requieren mediciones en la placa.
+
+Ver [app Android, conexión y plan de pruebas](docs/14-app-android-conectividad.md).
+
+### Progreso documentado
+
 El proyecto se encuentra en la etapa de **investigacion, definicion de arquitectura
 y prototipos iniciales**.
 
@@ -134,6 +150,9 @@ restricciones.
 - [ ] Implementar Wi-Fi para gateway directo, audio y actualizaciones OTA.
 - [ ] Detectar la wake word localmente y activar la conversacion.
 - [ ] Crear la app movil como puente BLE/Internet y superficie de permisos.
+- [ ] Validar asociación Android, reconexión y recepción con pantalla bloqueada.
+- [ ] Integrar el gateway de dispositivos con Hermes en la EC2 existente.
+- [ ] Probar audio comprimido por BLE y cambio de ruta sin mensajes duplicados.
 
 ### Fase 3 — Voz distribuida y proactividad
 

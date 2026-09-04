@@ -75,6 +75,10 @@ se verificaran fisicamente al recibirla.
 
 ### BLE y Wi-Fi
 
+La app propia se desarrollará primero para Android. La propuesta de vinculación,
+segundo plano, protocolo y enlace con la EC2 existente está en
+[App Android y conectividad](14-app-android-conectividad.md).
+
 **BLE** es el enlace cotidiano de bajo consumo con la app movil:
 
 - emparejamiento y aprovisionamiento;
@@ -82,6 +86,7 @@ se verificaran fisicamente al recibirla.
 - eventos de botones, gestos y sensores;
 - notificaciones, estado y mensajes breves;
 - puente hacia Internet cuando no haya una red Wi-Fi conocida.
+- audio comprimido por turnos hacia/desde la app, pendiente de validar rendimiento.
 
 **Wi-Fi** se reserva para tareas que necesitan mas ancho de banda o independencia:
 
@@ -219,7 +224,7 @@ Solo reciben credenciales de dispositivo limitadas, rotables y revocables.
 
 - pinout y revision exactos de la placa recibida;
 - microfono, altavoz, vibrador, bateria y autonomia real;
-- arquitectura de la app movil y plataformas objetivo;
+- implementación de la app Android nativa propuesta y versiones soportadas;
 - wake word engine que funcione con consumo aceptable;
 - ubicacion de STT/TTS segun bateria, privacidad y latencia;
 - protocolo del gateway para control, eventos y audio;
