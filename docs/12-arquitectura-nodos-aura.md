@@ -109,6 +109,10 @@ para control y Wi-Fi para transferencias, evitando trafico intensivo simultaneo.
 ## AURA Desktop
 
 AURA Desktop sera un robot de escritorio y una presencia ambiental mas rica.
+Una referencia directa es
+[`Mac AI Buddy`](https://github.com/AyhanSh/Mac-AI-Buddy), especialmente por su
+separacion entre cuerpo ESP32 y cerebro externo, rostro expresivo, camara y cabeza
+pan/tilt. AURA reutilizara ese patron dentro de su arquitectura distribuida.
 
 ### Capacidades previstas
 
@@ -118,6 +122,7 @@ AURA Desktop sera un robot de escritorio y una presencia ambiental mas rica.
 - deteccion de presencia, objetos, personas y eventos autorizados;
 - movimiento pan-tilt para orientar rostro o camara;
 - expresiones y gestos sincronizados con la conversacion;
+- control manual local para diagnostico y recuperacion;
 - interaccion con servicios, domotica y dispositivos autorizados;
 - futura base movil o actuadores adicionales, sujetos a limites de seguridad.
 

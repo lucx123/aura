@@ -22,6 +22,12 @@ Repositorios y herramientas utiles para el desarrollo de AURA.
 | elizaOS | github.com/elizaOS/eliza | Framework agentes multi-plataforma |
 | AutoGPT | github.com/Significant-Gravitas/AutoGPT | Agentes autonomos + integraciones |
 
+## Robots y presencia fisica
+
+| Proyecto | URL | Para que |
+|----------|-----|----------|
+| Mac AI Buddy | github.com/AyhanSh/Mac-AI-Buddy | Referencia principal para AURA Desktop: cara, camara, pan/tilt y separacion cuerpo/cerebro |
+
 ## Voice & Audio
 
 | Proyecto | URL | Para que |

@@ -215,3 +215,48 @@ Investigacion de proyectos open-source relevantes para el desarrollo de AURA.
 - Test-driven loop: generar > testear > refinar
 - Multi-model: Claude para analisis, OpenAI para generacion
 - Aplicable a AURA: cada "skill" puede ser un micro-agent con scope definido
+
+---
+
+## 13. Mac AI Buddy (github.com/AyhanSh/Mac-AI-Buddy)
+
+**Que es:** Robot de escritorio DIY que separa un cuerpo ESP32 de un cerebro que
+corre en un computador. Tiene cara OLED animada, camara, movimiento pan/tilt,
+conversacion por voz, memoria local y herramientas para controlar el equipo.
+
+**Relevancia para AURA: ALTA** - Es una referencia directa para AURA Desktop y
+tambien inspiro la idea general de darle presencia fisica y personalidad a AURA.
+
+**Arquitectura:**
+
+- Seeed XIAO ESP32-S3 Sense como cuerpo, camara y conectividad;
+- computador como cerebro para voz, memoria y herramientas;
+- pantalla OLED con expresiones y estados visibles;
+- dos servos controlados mediante PCA9685 para pan y tilt;
+- comunicacion por Wi-Fi entre cuerpo y cerebro;
+- interfaz web manual para controlar rostro y movimiento;
+- herramientas del modelo para cambiar expresion, mirar y capturar imagenes;
+- bucle separado para miradas autonomas, escaneo y seguimiento facial.
+
+**Ideas para AURA Desktop:**
+
+- conservar una separacion clara entre cuerpo fisico y razonamiento;
+- modelar expresiones, mirada y movimiento como herramientas del orquestador;
+- mantener un bucle local de animaciones y movimientos sutiles para dar vida sin
+  consultar al LLM constantemente;
+- añadir control manual de diagnostico para rostro, camara y servos;
+- alimentar servos mediante una fuente separada y compartir tierra con el control;
+- permitir desactivar fisicamente la camara;
+- usar pan/tilt primero y dejar locomocion o brazos para fases posteriores;
+- sincronizar expresion, direccion de mirada y voz como una sola actuacion.
+
+**Diferencias con AURA:**
+
+- AURA comparte memoria e identidad entre reloj, robot y canales digitales;
+- el cerebro puede vivir en EC2, laptop u otro nodo, no solo en un Mac;
+- AURA usa un gateway estable y un orquestador reemplazable;
+- AURA incorpora permisos, niveles de autonomia, proactividad y failover;
+- AURA Desktop debe funcionar como parte de un sistema distribuido, no como un
+  robot aislado.
+
+**Referencia:** https://github.com/AyhanSh/Mac-AI-Buddy

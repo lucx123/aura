@@ -29,6 +29,28 @@ El robot de escritorio reutilizara el mismo nucleo de AURA y añadira rostro,
 microfonos, altavoz, camara con controles de privacidad, sensores y movimiento.
 Las opciones siguientes corresponden principalmente a este nodo.
 
+### Referencia principal: Mac AI Buddy
+
+[`AyhanSh/Mac-AI-Buddy`](https://github.com/AyhanSh/Mac-AI-Buddy) es una de las
+inspiraciones directas de AURA Desktop y de la vision general de AURA. Demuestra un
+patron especialmente util: el ESP32 funciona como cuerpo expresivo, mientras un
+computador ejecuta voz, memoria, vision y razonamiento.
+
+Elementos que AURA toma como referencia:
+
+- rostro OLED animado con expresiones claramente distinguibles;
+- camara integrada en el cuerpo;
+- cabeza pan/tilt accionada por dos servos;
+- movimientos autonomos sutiles y seguimiento facial;
+- comandos de expresion, mirada y captura expuestos como tools para la IA;
+- interfaz web de control manual para pruebas y recuperacion;
+- alimentacion independiente para servos, con tierra comun;
+- separacion entre firmware corporal y software del cerebro.
+
+AURA extiende ese patron: el cerebro no queda atado a un Mac, la identidad se
+comparte con AURA Watch y los canales digitales, y todas las acciones pasan por
+permisos y niveles de autonomia.
+
 ## Opciones de "cara"
 
 ### Opcion A: Pantalla TFT circular
@@ -79,6 +101,7 @@ Expresiones posibles:
 - LED ring alrededor (indica estados)
 
 ### Inspiraciones de diseno
+- Mac AI Buddy (arquitectura cuerpo/cerebro, cara OLED, camara y pan/tilt)
 - Amazon Echo Show (pantalla frontal con voz)
 - Anki Vector (robotito expresivo con ojos)
 - EMO Robot (cara en pantalla, personalidad)
