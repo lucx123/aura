@@ -19,7 +19,7 @@ static void command(char *line) {
     } else if (!strcmp(line,"STATUS")) {
         aura_wifi_status_t wifi; aura_wifi_get_status(&wifi);
         aura_motion_status_t motion; aura_motion_get_status(&motion);
-        printf("AURA_STATUS epoch=%lld valid=%d rtc=%d offset=%d brightness=%d theme=%d clock=%s wifi=%d configured=%d ssid=%s reason=%u last_sync=%lld imu=%d xyz=%.2f,%.2f,%.2f movement=%.2f shakes=%u\n",(long long)time(NULL),aura_clock_valid(),aura_rtc_available(),aura_clock_offset(),aura_brightness(),aura_theme(),aura_clock_24h()?"24h":"12h",wifi.state,wifi.configured,wifi.configured?wifi.ssid:"-",wifi.disconnect_reason,(long long)wifi.last_sync,motion.available,motion.x,motion.y,motion.z,motion.movement,motion.shake_count);
+        printf("AURA_STATUS epoch=%lld valid=%d rtc=%d offset=%d brightness=%d theme=%d clock=%s wifi=%d configured=%d ssid=%s reason=%u last_sync=%lld imu=%d xyz=%.2f,%.2f,%.2f movement=%.2f rotation=%.1f shakes=%u\n",(long long)time(NULL),aura_clock_valid(),aura_rtc_available(),aura_clock_offset(),aura_brightness(),aura_theme(),aura_clock_24h()?"24h":"12h",wifi.state,wifi.configured,wifi.configured?wifi.ssid:"-",wifi.disconnect_reason,(long long)wifi.last_sync,motion.available,motion.x,motion.y,motion.z,motion.movement,motion.rotation,motion.shake_count);
     } else if (!strcmp(line,"WIFI_SETUP")) {
         aura_wifi_start_setup(); printf("AURA_WIFI setup\n");
     } else if (!strcmp(line,"WIFI_SYNC")) {
@@ -86,5 +86,5 @@ void app_main(void) {
     usb_serial_jtag_vfs_use_driver();
     xTaskCreate(serial_task,"aura_serial",8192,NULL,3,NULL);
     xTaskCreate(power_button_task,"aura_pwr",4096,NULL,4,NULL);
-    printf("AURA_READY Basic 1.2 dev.2\n");
+    printf("AURA_READY Basic 1.2 dev.3\n");
 }

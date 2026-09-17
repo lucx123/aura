@@ -15,8 +15,8 @@ La base Offline 0.2 fue compilada, cargada y validada en pantalla y touch el
   colocado dentro de una zona segura para las esquinas fisicas. Toca para cambiar
   expresion, manten para acariciar y arrastra para que siga el movimiento. La
   mirada tambien sigue suavemente la inclinacion fisica del reloj.
-- **Mareo:** cuatro movimientos fuertes y rapidos dentro de una ventana corta hacen
-  que Aura se maree, tambalee la mirada y vea estrellas durante unos segundos. El
+- **Mareo:** cuatro sacudidas muy fuertes con rotacion dentro de una ventana corta
+  hacen que Aura se maree, gire la mirada y vea estrellas durante unos segundos. El
   gesto tiene enfriamiento para no activarse repetidamente.
 - **Reloj:** hora analogica, digital y fecha, obtenidas del RTC PCF85063.
 - **Timer:** 5, 15 o 25 minutos; iniciar, pausar, continuar y reiniciar. Al terminar
@@ -44,8 +44,9 @@ segundo, o con un toque corto de PWR.
 BOOT sigue reservado para programacion y recuperacion.
 
 El descanso apaga la iluminacion del panel; todavia no suspende LVGL ni entra en
-deep sleep. El QMI8658 usa solo el acelerometro: 62,5 Hz con pantalla activa y
-21 Hz con pantalla apagada; el giroscopio queda deshabilitado. Los movimientos no
+deep sleep. El QMI8658 usa acelerometro y giroscopio a 62,5 Hz con pantalla activa
+para separar una sacudida intencional del movimiento al caminar o correr. Durante
+el descanso el giroscopio se apaga y el acelerometro baja a 21 Hz. Los movimientos no
 despiertan la pantalla en esta version para evitar falsos encendidos. Aun no se ha
 medido autonomia.
 El temporizador no se conserva tras reiniciar y el aviso es visual, sin sonido ni

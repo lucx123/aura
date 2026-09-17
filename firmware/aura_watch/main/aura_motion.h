@@ -8,6 +8,7 @@ typedef struct {
     float y;
     float z;
     float movement;
+    float rotation;
     unsigned shake_count;
 } aura_motion_status_t;
 

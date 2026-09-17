@@ -300,9 +300,9 @@ static void animate(lv_timer_t *t)
         next_gaze = now + 1800000 + esp_random() % 2800000;
     }
     if (mood == 5) {
-        float phase = (float)(now % 900000) / 900000.0f * 2.0f * PI;
-        target_x = (int)(sinf(phase) * 15.0f);
-        target_y = (int)(cosf(phase) * 8.0f);
+        float phase = (float)(now % 620000) / 620000.0f * 2.0f * PI;
+        target_x = (int)(sinf(phase) * 18.0f);
+        target_y = (int)(cosf(phase) * 12.0f);
     }
     gaze_x += (target_x - gaze_x) / 3;
     gaze_y += (target_y - gaze_y) / 3;
@@ -318,7 +318,7 @@ static void animate(lv_timer_t *t)
     }
     for (int i = 0; i < 4; ++i) {
         if (mood == 5) {
-            float phase = (float)(now % 1400000) / 1400000.0f * 2.0f * PI + i * PI / 2.0f;
+            float phase = (float)(now % 850000) / 850000.0f * 2.0f * PI + i * PI / 2.0f;
             lv_obj_set_pos(dizzy_stars[i], 200 + (int)(cosf(phase) * 137.0f),
                            45 + (int)(sinf(phase) * 31.0f));
             lv_obj_remove_flag(dizzy_stars[i], LV_OBJ_FLAG_HIDDEN);
@@ -723,7 +723,7 @@ void aura_ui_init(void)
         theme_buttons[i] = box(brightness_card, 244 + i * 25, 15, 16, 16, colors[i], LV_RADIUS_CIRCLE);
     }
     menu_row(pages[3], "Zz", 0x493238, "Apagar pantalla", "Tambien puedes mantener PWR", 541, sleep_click, 0, NULL);
-    lv_obj_t *version = center_label(pages[3], "AURA Watch - Basic 1.2 dev.2", &lv_font_montserrat_14, MUTED, 626);
+    lv_obj_t *version = center_label(pages[3], "AURA Watch - Basic 1.2 dev.3", &lv_font_montserrat_14, MUTED, 626);
     lv_obj_set_height(pages[3], PAGE_HEIGHT);
     (void)version;
 
