@@ -52,14 +52,14 @@ orquestador concreto. Cambiar el cerebro no debe obligar a reprogramar cada nodo
 ## AURA Watch
 
 El reloj sera la primera presencia fisica portatil de AURA. Usara una **Waveshare
-ESP32-S3-Touch-AMOLED-2.06**, ya comprada y pendiente de recepcion. Su ESP32-S3R8
+ESP32-S3-Touch-AMOLED-2.06**, recibida y funcionando en una prueba inicial. Su ESP32-S3R8
 ejecutara el firmware completo del reloj: interfaz tactil, audio local, wake word,
 BLE, Wi-Fi, sensores, energia y comunicacion con AURA Gateway. El razonamiento LLM
 y otros procesos pesados seguiran en el orquestador.
 
 La configuracion conocida se documenta en
 [`13-aura-watch-hardware.md`](13-aura-watch-hardware.md). La revision y el pinout
-se verificaran fisicamente al recibirla.
+siguen pendientes de verificacion documentada.
 
 ### Capacidades
 

@@ -2,8 +2,10 @@
 
 ## Placa adquirida
 
-**Modelo:** Waveshare ESP32-S3-Touch-AMOLED-2.06  
-**Estado:** comprada, pendiente de recepcion y validacion fisica  
+**Modelo:** Waveshare ESP32-S3-Touch-AMOLED-2.06 (serigrafia confirmada en la placa)
+**Estado:** recibida; funciona en una prueba inicial comunicada el 2026-09-14.
+Queda pendiente documentar la revision y las pruebas de cada periferico.
+
 **Funcion:** plataforma completa del primer AURA Watch
 
 Es una placa de desarrollo vestible con formato de reloj. Reune procesamiento,
@@ -34,7 +36,19 @@ necesarios para el primer prototipo.
 
 Estas especificaciones proceden de la ficha del producto adquirido. El pinout,
 revision de PCB, codec de audio y perifericos incluidos se confirmaran contra la
-unidad recibida antes de escribir drivers definitivos.
+unidad recibida antes de escribir drivers definitivos. La prueba inicial confirma
+funcionamiento general, pero aun no hay un registro detallado de perifericos.
+
+El 2026-09-14 se detecto la placa por USB en COM4. Una lectura con esptool 5.4.0
+confirmo ESP32-S3 revision de chip v0.2, PSRAM de 8 MB y flash de 32 MB.
+Se guardo una copia completa de la flash de fabrica, verificada por tamano y
+SHA-256, en `firmware/aura_watch/backups/` (excluida de Git). La revision del
+chip no identifica por si sola la revision de la PCB.
+
+Ese mismo dia se compilo el primer firmware AURA con ESP-IDF 5.5.5 y el BSP
+Waveshare 2.0.0, y se cargo en COM4 con verificacion de hashes. El arranque USB
+confirma PSRAM correcta y la inicializacion de la pantalla. La prueba manual
+del boton tactil sigue pendiente de confirmacion.
 
 ## Funciones que habilita
 
@@ -132,8 +146,12 @@ firmware/aura_watch/
 └── board/           # Pinout y drivers Waveshare
 ```
 
-## Plan al recibir la placa
+## Plan de validacion de la placa
 
+- [x] Recibir la placa y comprobar funcionamiento inicial.
+- [x] Confirmar el modelo impreso en la placa: ESP32-S3-Touch-AMOLED-2.06.
+- [x] Detectar por USB el ESP32-S3 y respaldar los 32 MB de flash.
+- [x] Compilar y cargar la pantalla inicial de AURA; confirmar arranque por USB.
 - [ ] Fotografiar y registrar revision exacta de PCB.
 - [ ] Confirmar pinout, componentes y modelo del codec de audio.
 - [ ] Compilar y ejecutar el ejemplo oficial de fabrica.
@@ -155,3 +173,36 @@ firmware/aura_watch/
 - protocolo de audio hacia la app o gateway;
 - formato de assets y uso de microSD;
 - estrategia de particiones para firmware, recursos y OTA.
+
+## Firmware offline 0.2 - 2026-09-14
+
+El usuario confirmo pantalla y touch con la prueba inicial Touch OK. Se desarrollo
+una interfaz propia con ojos animados/interactivos, reloj analogico y digital,
+temporizador, brillo y temas. Se detectaron PCF85063 y AXP2101 por I2C; la hora
+se sincronizo desde el PC y se recupero correctamente tras un reinicio USB.
+La bateria informa 100% durante la prueba conectada; no es una medicion de autonomia.
+
+La finalizacion del temporizador se verifico con una cuenta de dos segundos y
+captura del mensaje Tiempo cumplido. El modo descanso baja el brillo, sin deep
+sleep. No incorpora aun IA, voz, BLE o gateway. Codigo e instrucciones en
+`firmware/aura_watch/README.md`. La implementacion usa ESP-IDF 5.5.5 y LVGL 9.5.0.
+
+## AURA Watch Basic 1.0 - iniciado 2026-09-15
+
+Basic 1.0 pasa a ser la linea oficial del firmware sin IA. Antes de modificar la
+base se respaldo la fuente completa de Offline 0.2 dentro de
+`firmware/aura_watch/backups/`. La primera compilacion de desarrollo incorpora una
+zona segura para las esquinas fisicas, una cara visual mas contenida con boca
+contextual, caricia por pulsacion mantenida y formato horario 12/24 persistente.
+
+El alcance ordenado, presupuesto de energia y secuencia de implementacion estan en
+`firmware/aura_watch/BASIC-1.0.md`. Basic 1.0 dev.1 se cargo y valido en la placa.
+Basic 1.1 dev.2 agrega Centro Aura sin barra inferior, portal Wi-Fi temporal,
+credenciales persistentes, sincronizacion NTP por rafagas y control de PWR mediante
+eventos del AXP2101. Se compilo y cargo en COM4; el arranque, RTC, estado Wi-Fi y
+las capturas se validaron por USB. La pulsacion fisica de PWR queda como prueba manual.
+
+Basic 1.2 dev.1 valida el QMI8658 fisico e incorpora mirada por inclinacion y
+reaccion de mareo al agitar. Para ahorrar energia mantiene el giroscopio apagado,
+usa el acelerometro a 62,5 Hz con pantalla activa y baja a 21 Hz en descanso. El
+sensor, Wi-Fi guardado, NTP y RTC se comprobaron juntos en la placa.

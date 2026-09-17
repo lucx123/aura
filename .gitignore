@@ -21,3 +21,11 @@ dist/
 __pycache__/
 *.py[cod]
 node_modules/
+
+# Local AURA Watch tooling and vendor reference
+firmware/aura_watch/.tools/
+firmware/aura_watch/.waveshare-reference/
+firmware/aura_watch/backups/
+firmware/aura_watch/build/
+firmware/aura_watch/managed_components/
+firmware/aura_watch/sdkconfig

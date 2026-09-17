@@ -113,6 +113,13 @@ Actualmente hay:
 - una lista de compras organizada por fases;
 - un primer prototipo de firmware para NodeMCU ESP8266 con interfaz web y LCD I2C.
 - una arquitectura definida para AURA Watch, AURA Desktop y coordinacion de voz.
+- la placa AURA Watch recibida y funcionando en una prueba inicial; falta registrar
+  que perifericos se probaron y sus resultados por separado.
+- un primer firmware propio en `firmware/aura_watch`, compilado y cargado:
+  reloj offline con ojos interactivos, hora/fecha, bateria, temporizador y ajustes;
+  pantalla y touch confirmados por el usuario.
+- AURA Watch Basic 1.2 como linea oficial sin IA, con respaldo verificable,
+  interfaz para esquinas fisicas, Wi-Fi/NTP austero y personalidad mediante IMU.
 
 ## Roadmap
 
@@ -143,7 +150,8 @@ restricciones.
 
 - [x] Adquirir la Waveshare ESP32-S3-Touch-AMOLED-2.06.
 - [x] Definir pantalla AMOLED tactil, IMU, RTC, audio, microSD y gestion de energia.
-- [ ] Recibir la placa, verificar revision, pinout y perifericos reales.
+- [x] Recibir la placa y comprobar que funciona en una prueba inicial.
+- [ ] Verificar revision, pinout y perifericos reales por separado.
 - [ ] Integrar microfono, altavoz, bateria y vibracion.
 - [ ] Crear interfaz de reloj, ojos, estados, avisos y recordatorios.
 - [ ] Implementar BLE para emparejamiento, configuracion y enlace con la app.

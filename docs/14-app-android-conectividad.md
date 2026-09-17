@@ -1,7 +1,8 @@
 # AURA Watch: app Android y conexión con EC2
 
 Fecha: 2026-09-04. Diseño propuesto; app y protocolo pendientes de implementar.
-La placa Waveshare está comprada y pendiente de recepción. El estado del servidor
+Actualización 2026-09-14: la placa Waveshare fue recibida y funciona en una prueba
+inicial; las verificaciones por periférico siguen sin documentarse. El estado del servidor
 se toma de `research/08-estado-actual.md`; no se ha comprobado su ejecución en vivo
 durante esta investigación.
 
