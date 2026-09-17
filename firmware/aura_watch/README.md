@@ -15,8 +15,8 @@ La base Offline 0.2 fue compilada, cargada y validada en pantalla y touch el
   colocado dentro de una zona segura para las esquinas fisicas. Toca para cambiar
   expresion, manten para acariciar y arrastra para que siga el movimiento. La
   mirada tambien sigue suavemente la inclinacion fisica del reloj.
-- **Mareo:** tres movimientos bruscos dentro de una ventana corta hacen que Aura
-  se maree, mueva los ojos en circulos y cambie la boca durante unos segundos. El
+- **Mareo:** cuatro movimientos fuertes y rapidos dentro de una ventana corta hacen
+  que Aura se maree, tambalee la mirada y vea estrellas durante unos segundos. El
   gesto tiene enfriamiento para no activarse repetidamente.
 - **Reloj:** hora analogica, digital y fecha, obtenidas del RTC PCF85063.
 - **Timer:** 5, 15 o 25 minutos; iniciar, pausar, continuar y reiniciar. Al terminar

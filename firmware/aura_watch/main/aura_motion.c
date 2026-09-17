@@ -56,11 +56,11 @@ static void motion_task(void *unused)
 
             int64_t now = esp_timer_get_time();
             bool shook = false;
-            if (!sleeping && now >= cooldown_until && movement > 8.5f) {
-                if (!shake_window || now - shake_window > 650000) {
+            if (!sleeping && now >= cooldown_until && movement > 14.0f) {
+                if (!shake_window || now - shake_window > 520000) {
                     shake_window = now;
                     shake_hits = 1;
-                } else if (++shake_hits >= 3) {
+                } else if (++shake_hits >= 4) {
                     shook = true;
                     shake_hits = 0;
                     shake_window = 0;

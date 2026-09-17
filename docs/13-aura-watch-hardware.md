@@ -202,7 +202,7 @@ credenciales persistentes, sincronizacion NTP por rafagas y control de PWR media
 eventos del AXP2101. Se compilo y cargo en COM4; el arranque, RTC, estado Wi-Fi y
 las capturas se validaron por USB. La pulsacion fisica de PWR queda como prueba manual.
 
-Basic 1.2 dev.1 valida el QMI8658 fisico e incorpora mirada por inclinacion y
-reaccion de mareo al agitar. Para ahorrar energia mantiene el giroscopio apagado,
+Basic 1.2 dev.2 valida el QMI8658 fisico e incorpora mirada por inclinacion y
+reaccion de mareo con estrellas al agitar con fuerza. Para ahorrar energia mantiene el giroscopio apagado,
 usa el acelerometro a 62,5 Hz con pantalla activa y baja a 21 Hz en descanso. El
 sensor, Wi-Fi guardado, NTP y RTC se comprobaron juntos en la placa.

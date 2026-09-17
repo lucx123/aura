@@ -86,5 +86,5 @@ void app_main(void) {
     usb_serial_jtag_vfs_use_driver();
     xTaskCreate(serial_task,"aura_serial",8192,NULL,3,NULL);
     xTaskCreate(power_button_task,"aura_pwr",4096,NULL,4,NULL);
-    printf("AURA_READY Basic 1.2 dev.1\n");
+    printf("AURA_READY Basic 1.2 dev.2\n");
 }

@@ -25,7 +25,7 @@ static const uint32_t colors[] = {0x8af2dd, 0xb6a2ff, 0xffd495};
 static const char *weekdays[] = {"Dom", "Lun", "Mar", "Mie", "Jue", "Vie", "Sab"};
 static const char *months[] = {"ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"};
 static lv_obj_t *pages[5], *battery_label, *local_label, *network_label, *wifi_icon_label;
-static lv_obj_t *eyes[2], *pupils[2], *shine[2], *mouth, *face, *mood_label;
+static lv_obj_t *eyes[2], *pupils[2], *shine[2], *mouth, *face, *mood_label, *dizzy_stars[4];
 static lv_obj_t *home_time, *home_date, *clock_time, *clock_date;
 static lv_obj_t *hour_hand, *minute_hand, *second_hand, *clock_dot;
 static lv_point_precise_t hour_points[2], minute_points[2], second_points[2];
@@ -184,7 +184,7 @@ void aura_ui_dizzy(void)
     mood = 5;
     mood_until = now_us() + 4800000;
     motion_until = mood_until;
-    lv_label_set_text(mood_label, "Uff... me mareaste");
+    lv_label_set_text(mood_label, "Estoy viendo estrellitas...");
 }
 
 static bool wake_only(void)
@@ -301,8 +301,8 @@ static void animate(lv_timer_t *t)
     }
     if (mood == 5) {
         float phase = (float)(now % 900000) / 900000.0f * 2.0f * PI;
-        target_x = (int)(sinf(phase) * 17.0f);
-        target_y = (int)(cosf(phase) * 11.0f);
+        target_x = (int)(sinf(phase) * 15.0f);
+        target_y = (int)(cosf(phase) * 8.0f);
     }
     gaze_x += (target_x - gaze_x) / 3;
     gaze_y += (target_y - gaze_y) / 3;
@@ -316,15 +316,23 @@ static void animate(lv_timer_t *t)
         next_gaze = now + 900000;
         lv_label_set_text(mood_label, sleeping ? "Descansando" : "Estoy contigo");
     }
+    for (int i = 0; i < 4; ++i) {
+        if (mood == 5) {
+            float phase = (float)(now % 1400000) / 1400000.0f * 2.0f * PI + i * PI / 2.0f;
+            lv_obj_set_pos(dizzy_stars[i], 200 + (int)(cosf(phase) * 137.0f),
+                           45 + (int)(sinf(phase) * 31.0f));
+            lv_obj_remove_flag(dizzy_stars[i], LV_OBJ_FLAG_HIDDEN);
+        } else lv_obj_add_flag(dizzy_stars[i], LV_OBJ_FLAG_HIDDEN);
+    }
     for (int i = 0; i < 2; ++i) {
         int height = 112, width = 86;
         if (sleeping) height = 9;
-        else if (now < blink_until) height = 10;
+        else if (now < blink_until && mood != 5) height = 10;
         else if (mood == 1) { height = 29; width = 94; }
         else if (mood == 2 && i == 0) { height = 133; width = 93; }
         else if (mood == 3 && i == 1) height = 12;
         else if (mood == 4) { height = 14; width = 92; }
-        else if (mood == 5) { height = i == 0 ? 82 : 65; width = 91; }
+        else if (mood == 5) { height = 88; width = 88; }
         lv_obj_set_size(eyes[i], width, height);
         lv_obj_set_pos(eyes[i], (i == 0 ? 98 : 226) + gaze_x / 3, 109 - height / 2 + gaze_y / 3);
         lv_obj_set_style_bg_color(eyes[i], accent(), 0);
@@ -343,10 +351,10 @@ static void animate(lv_timer_t *t)
     else if (mood == 2) { mouth_width = 14; mouth_height = 14; }
     else if (mood == 3) { mouth_width = 28; mouth_height = 5; }
     else if (mood == 4 || sleeping) { mouth_width = 16; mouth_height = 3; }
-    else if (mood == 5) { mouth_width = 22; mouth_height = 27; }
+    else if (mood == 5) { mouth_width = 34; mouth_height = 6; }
     lv_obj_set_size(mouth, mouth_width, mouth_height);
-    lv_obj_set_pos(mouth, 205 - mouth_width / 2, (mood == 5 ? 208 : 202) - mouth_height / 2);
-    lv_obj_set_style_bg_color(mouth, mood == 5 ? lv_color_hex(0xb8efc9) : accent(), 0);
+    lv_obj_set_pos(mouth, 205 - mouth_width / 2, (mood == 5 ? 211 : 202) - mouth_height / 2);
+    lv_obj_set_style_bg_color(mouth, accent(), 0);
 }
 
 static void set_hand(lv_obj_t *hand, lv_point_precise_t pts[2], float angle, int length)
@@ -645,6 +653,11 @@ void aura_ui_init(void)
         pupils[i] = box(eyes[i], 27, 29, 32, 54, 0x06110f, 16);
         shine[i] = box(eyes[i], 36, 36, 8, 14, PAPER, 5);
     }
+    for (int i = 0; i < 4; ++i) {
+        dizzy_stars[i] = label(face, "*", &lv_font_montserrat_24,
+                               i % 2 ? 0xffd495 : colors[aura_theme()], 0, 0);
+        lv_obj_add_flag(dizzy_stars[i], LV_OBJ_FLAG_HIDDEN);
+    }
     mouth = box(face, 195, 200, 20, 4, colors[aura_theme()], LV_RADIUS_CIRCLE);
     home_time = center_label(pages[0], "--:--", &lv_font_montserrat_48, PAPER, 236);
     home_date = center_label(pages[0], "", &lv_font_montserrat_18, MUTED, 294);
@@ -710,7 +723,7 @@ void aura_ui_init(void)
         theme_buttons[i] = box(brightness_card, 244 + i * 25, 15, 16, 16, colors[i], LV_RADIUS_CIRCLE);
     }
     menu_row(pages[3], "Zz", 0x493238, "Apagar pantalla", "Tambien puedes mantener PWR", 541, sleep_click, 0, NULL);
-    lv_obj_t *version = center_label(pages[3], "AURA Watch - Basic 1.2", &lv_font_montserrat_14, MUTED, 626);
+    lv_obj_t *version = center_label(pages[3], "AURA Watch - Basic 1.2 dev.2", &lv_font_montserrat_14, MUTED, 626);
     lv_obj_set_height(pages[3], PAGE_HEIGHT);
     (void)version;
 
