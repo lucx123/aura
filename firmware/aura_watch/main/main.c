@@ -29,7 +29,7 @@ static void command(char *line) {
     } else {
         bsp_display_lock(0);
         if (!strcmp(line,"SCREEN")) aura_ui_dump_screen();
-        else if (sscanf(line,"PAGE %d",&value)==1 && value>=0 && value<5) aura_ui_page(value);
+        else if (sscanf(line,"PAGE %d",&value)==1 && value>=0 && value<6) aura_ui_page(value);
         else if (sscanf(line,"TIMER %d",&value)==1 && value>0 && value<=86400) aura_ui_timer_start(value);
         else if (!strcmp(line,"SLEEP")) aura_ui_sleep(1);
         else if (!strcmp(line,"WAKE")) aura_ui_sleep(0);
@@ -37,6 +37,9 @@ static void command(char *line) {
         else if (!strcmp(line,"PWR_LONG")) aura_ui_power_long();
         else if (!strcmp(line,"PWR_RELEASE")) aura_ui_power_release();
         else if (!strcmp(line,"DIZZY")) aura_ui_dizzy();
+        else if (!strcmp(line,"STOPWATCH_START")) { aura_ui_page(5); aura_ui_stopwatch_action(0); }
+        else if (!strcmp(line,"STOPWATCH_LAP")) aura_ui_stopwatch_action(1);
+        else if (!strcmp(line,"STOPWATCH_RESET")) aura_ui_stopwatch_action(-1);
         else printf("AURA_ERROR unknown command\n");
         bsp_display_unlock();
     }
@@ -86,5 +89,5 @@ void app_main(void) {
     usb_serial_jtag_vfs_use_driver();
     xTaskCreate(serial_task,"aura_serial",8192,NULL,3,NULL);
     xTaskCreate(power_button_task,"aura_pwr",4096,NULL,4,NULL);
-    printf("AURA_READY Basic 1.2 dev.3\n");
+    printf("AURA_READY Basic 1.3 dev.1\n");
 }

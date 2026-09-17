@@ -13,4 +13,5 @@ void aura_ui_power_release(void);
 bool aura_ui_is_sleeping(void);
 void aura_ui_motion(float x, float y);
 void aura_ui_dizzy(void);
+void aura_ui_stopwatch_action(int action);
 void aura_ui_dump_screen(void);

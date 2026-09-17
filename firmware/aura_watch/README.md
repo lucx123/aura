@@ -21,6 +21,8 @@ La base Offline 0.2 fue compilada, cargada y validada en pantalla y touch el
 - **Reloj:** hora analogica, digital y fecha, obtenidas del RTC PCF85063.
 - **Timer:** 5, 15 o 25 minutos; iniciar, pausar, continuar y reiniciar. Al terminar
   abre la pantalla del temporizador y muestra un aviso visual.
+- **Cronometro:** mide minutos, segundos y centesimas; permite pausar, continuar,
+  reiniciar y guardar vueltas mientras se navega por el resto del reloj.
 - **Centro Aura:** menu vertical con Wi-Fi, formato 12/24 h, apariencia, brillo,
   temporizador, esfera analogica y descanso. Se abre con un toque corto en PWR;
   no hay barra inferior ni controles manuales de hora.

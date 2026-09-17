@@ -4,7 +4,8 @@ import serial
 p=argparse.ArgumentParser()
 p.add_argument('command', choices=['sync-time','status','page','timer','screen','sleep','wake',
                                   'wifi-setup','wifi-sync','wifi-forget',
-                                  'pwr-short','pwr-long','pwr-release','dizzy'])
+                                  'pwr-short','pwr-long','pwr-release','dizzy',
+                                  'stopwatch-start','stopwatch-lap','stopwatch-reset'])
 p.add_argument('value', nargs='?')
 p.add_argument('--port',default='COM4')
 a=p.parse_args()

@@ -30,7 +30,7 @@ Principios visuales:
 - [x] Reloj analogico y digital.
 - [x] Temporizador local.
 - [ ] Alarmas persistentes mediante RTC.
-- [ ] Cronometro.
+- [x] Cronometro con pausa, continuacion, reinicio y vueltas.
 - [ ] Modo concentracion/Pomodoro.
 - [x] Sincronizacion NTP por rafagas y copia al RTC.
 - [ ] Zona horaria `America/Santiago` con cambio estacional automatico.

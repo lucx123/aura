@@ -207,3 +207,7 @@ reaccion de mareo con estrellas al combinar sacudida fuerte y rotacion. El giros
 funciona a 62,5 Hz solo con pantalla activa; en descanso se apaga y el acelerometro
 baja a 21 Hz. El
 sensor, Wi-Fi guardado, NTP y RTC se comprobaron juntos en la placa.
+
+Basic 1.3 dev.1 agrega un cronometro local con centesimas, pausa, continuacion,
+reinicio y vueltas. La medicion usa el temporizador monotono del ESP32-S3 y sigue
+avanzando al cambiar de pantalla o apagar el panel.

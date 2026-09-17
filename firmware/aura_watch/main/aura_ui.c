@@ -24,17 +24,20 @@
 static const uint32_t colors[] = {0x8af2dd, 0xb6a2ff, 0xffd495};
 static const char *weekdays[] = {"Dom", "Lun", "Mar", "Mie", "Jue", "Vie", "Sab"};
 static const char *months[] = {"ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"};
-static lv_obj_t *pages[5], *battery_label, *local_label, *network_label, *wifi_icon_label;
+static lv_obj_t *pages[6], *battery_label, *local_label, *network_label, *wifi_icon_label;
 static lv_obj_t *eyes[2], *pupils[2], *shine[2], *mouth, *face, *mood_label, *dizzy_stars[4];
 static lv_obj_t *home_time, *home_date, *clock_time, *clock_date;
 static lv_obj_t *hour_hand, *minute_hand, *second_hand, *clock_dot;
 static lv_point_precise_t hour_points[2], minute_points[2], second_points[2];
 static lv_obj_t *timer_text, *timer_status, *timer_action, *timer_fill;
+static lv_obj_t *stopwatch_text, *stopwatch_status, *stopwatch_action, *stopwatch_lap;
 static lv_obj_t *brightness_label, *brightness_slider, *theme_buttons[3], *format_value, *theme_value;
 static lv_obj_t *wifi_state_label, *wifi_ssid_label, *wifi_action_label, *wifi_sync_label;
 static lv_obj_t *notice, *power_overlay, *power_countdown, *power_hint;
 static int current_page, mood, selected_seconds = 300, remaining_seconds = 300;
 static int timer_state; // 0 ready, 1 running, 2 paused, 3 finished
+static int stopwatch_state, stopwatch_laps; // 0 ready, 1 running, 2 paused
+static int64_t stopwatch_started, stopwatch_accumulated;
 static int64_t deadline, mood_until, next_gaze, next_blink, blink_until, motion_until;
 static int64_t last_activity, notice_until;
 static int gaze_x, gaze_y, target_x, target_y;
@@ -135,10 +138,10 @@ void aura_ui_power_release(void)
 
 void aura_ui_page(int page)
 {
-    if (page < 0 || page > 4) return;
+    if (page < 0 || page > 5) return;
     current_page = page;
     touching = false;
-    for (int i = 0; i < 5; ++i) {
+    for (int i = 0; i < 6; ++i) {
         if (i == page) lv_obj_remove_flag(pages[i], LV_OBJ_FLAG_HIDDEN);
         else lv_obj_add_flag(pages[i], LV_OBJ_FLAG_HIDDEN);
     }
@@ -398,6 +401,59 @@ static void timer_click(lv_event_t *e)
     }
 }
 
+static int64_t stopwatch_elapsed(void)
+{
+    return stopwatch_accumulated + (stopwatch_state == 1 ? now_us() - stopwatch_started : 0);
+}
+
+void aura_ui_stopwatch_action(int action)
+{
+    int64_t elapsed = stopwatch_elapsed();
+    if (action == -1) {
+        stopwatch_state = 0;
+        stopwatch_laps = 0;
+        stopwatch_accumulated = 0;
+        lv_label_set_text(stopwatch_lap, "Sin vueltas todavia");
+    } else if (action == 1) {
+        if (stopwatch_state != 1) return;
+        stopwatch_laps++;
+        char lap[64];
+        int64_t centiseconds = elapsed / 10000;
+        snprintf(lap, sizeof(lap), "Vuelta %d  -  %02lld:%02lld.%02lld", stopwatch_laps,
+                 centiseconds / 6000, (centiseconds / 100) % 60, centiseconds % 100);
+        lv_label_set_text(stopwatch_lap, lap);
+        show_notice("Aura guardo tu vuelta");
+    } else if (stopwatch_state == 1) {
+        stopwatch_accumulated = elapsed;
+        stopwatch_state = 2;
+    } else {
+        stopwatch_started = now_us();
+        stopwatch_state = 1;
+    }
+    last_activity = now_us();
+}
+
+static void stopwatch_click(lv_event_t *e)
+{
+    if (wake_only()) return;
+    aura_ui_stopwatch_action((intptr_t)lv_event_get_user_data(e));
+}
+
+static void stopwatch_tick(lv_timer_t *timer)
+{
+    (void)timer;
+    if (!stopwatch_text) return;
+    int64_t centiseconds = stopwatch_elapsed() / 10000;
+    char value[24];
+    snprintf(value, sizeof(value), "%02lld:%02lld.%02lld", centiseconds / 6000,
+             (centiseconds / 100) % 60, centiseconds % 100);
+    lv_label_set_text(stopwatch_text, value);
+    const char *states[] = {"Listo cuando tu quieras", "Midiendo tu momento", "Cronometro en pausa"};
+    const char *actions[] = {"Iniciar", "Pausar", "Continuar"};
+    lv_label_set_text(stopwatch_status, states[stopwatch_state]);
+    lv_label_set_text(stopwatch_action, actions[stopwatch_state]);
+}
+
 static void tick(lv_timer_t *t)
 {
     (void)t;
@@ -526,6 +582,7 @@ static lv_obj_t *menu_row(lv_obj_t *parent, const char *glyph, uint32_t icon_col
 static void wifi_open(lv_event_t *e) { (void)e; if (!wake_only()) aura_ui_page(4); }
 static void timer_open(lv_event_t *e) { (void)e; if (!wake_only()) aura_ui_page(2); }
 static void clock_open(lv_event_t *e) { (void)e; if (!wake_only()) aura_ui_page(1); }
+static void stopwatch_open(lv_event_t *e) { (void)e; if (!wake_only()) aura_ui_page(5); }
 
 static void theme_cycle(lv_event_t *e)
 {
@@ -640,7 +697,7 @@ void aura_ui_init(void)
     battery_label = label(screen, "--", &lv_font_montserrat_16, PAPER, 300, 26);
     lv_obj_set_width(battery_label, 58);
     lv_obj_set_style_text_align(battery_label, LV_TEXT_ALIGN_RIGHT, 0);
-    for (int i = 0; i < 5; ++i) {
+    for (int i = 0; i < 6; ++i) {
         pages[i] = box(screen, 0, PAGE_TOP, UI_WIDTH, PAGE_HEIGHT, 0, 0);
         lv_obj_add_flag(pages[i], LV_OBJ_FLAG_CLICKABLE);
     }
@@ -700,14 +757,15 @@ void aura_ui_init(void)
     center_label(pages[3], "Centro Aura", &lv_font_montserrat_24, PAPER, 3);
     menu_row(pages[3], "Wi", 0x176354, "Wi-Fi", "Internet en rafagas", 45, wifi_open, 0, NULL);
     menu_row(pages[3], "5m", 0x715b28, "Temporizador", "Pausas de 5, 15 o 25 min", 125, timer_open, 0, NULL);
-    menu_row(pages[3], "An", 0x33495a, "Reloj analogico", "Una esfera mas clasica", 205, clock_open, 0, NULL);
+    menu_row(pages[3], "00", 0x28566b, "Cronometro", "Tiempo y vueltas", 205, stopwatch_open, 0, NULL);
+    menu_row(pages[3], "An", 0x33495a, "Reloj analogico", "Una esfera mas clasica", 285, clock_open, 0, NULL);
     menu_row(pages[3], "12", 0x50417d, "Formato de hora", aura_clock_24h() ? "24 horas" : "12 horas",
-             285, format_click, 0, &format_value);
+             365, format_click, 0, &format_value);
     menu_row(pages[3], "Aa", 0x3e5270, "Apariencia", aura_theme() == 0 ? "Menta" : aura_theme() == 1 ? "Lila" : "Sol",
-             365, theme_cycle, 0, &theme_value);
+             445, theme_cycle, 0, &theme_value);
     char text[32];
     snprintf(text, sizeof(text), "Brillo  %d%%", aura_brightness());
-    lv_obj_t *brightness_card = box(pages[3], 28, 445, 354, 88, INK, 22);
+    lv_obj_t *brightness_card = box(pages[3], 28, 525, 354, 88, INK, 22);
     brightness_label = label(brightness_card, text, &lv_font_montserrat_18, PAPER, 20, 13);
     brightness_slider = lv_slider_create(pages[3]);
     lv_obj_set_parent(brightness_slider, brightness_card);
@@ -722,8 +780,8 @@ void aura_ui_init(void)
     for (int i = 0; i < 3; ++i) {
         theme_buttons[i] = box(brightness_card, 244 + i * 25, 15, 16, 16, colors[i], LV_RADIUS_CIRCLE);
     }
-    menu_row(pages[3], "Zz", 0x493238, "Apagar pantalla", "Tambien puedes mantener PWR", 541, sleep_click, 0, NULL);
-    lv_obj_t *version = center_label(pages[3], "AURA Watch - Basic 1.2 dev.3", &lv_font_montserrat_14, MUTED, 626);
+    menu_row(pages[3], "Zz", 0x493238, "Apagar pantalla", "Tambien puedes mantener PWR", 621, sleep_click, 0, NULL);
+    lv_obj_t *version = center_label(pages[3], "AURA Watch - Basic 1.3 dev.1", &lv_font_montserrat_14, MUTED, 706);
     lv_obj_set_height(pages[3], PAGE_HEIGHT);
     (void)version;
 
@@ -739,6 +797,16 @@ void aura_ui_init(void)
     wifi_action_label = lv_obj_get_child(primary, 0);
     button(pages[4], "Cambiar red", 42, 307, 156, 45, wifi_setup, 0);
     button(pages[4], "Olvidar", 212, 307, 156, 45, wifi_forget_click, 0);
+
+    button(pages[5], LV_SYMBOL_LEFT, 28, 4, 54, 46, menu_back, 0);
+    center_label(pages[5], "Cronometro Aura", &lv_font_montserrat_24, PAPER, 13);
+    stopwatch_text = center_label(pages[5], "00:00.00", &lv_font_montserrat_48, colors[aura_theme()], 103);
+    stopwatch_status = center_label(pages[5], "Listo cuando tu quieras", &lv_font_montserrat_18, MUTED, 169);
+    stopwatch_lap = center_label(pages[5], "Sin vueltas todavia", &lv_font_montserrat_14, MUTED, 216);
+    lv_obj_t *stopwatch_main = button(pages[5], "Iniciar", 28, 278, 226, 60, stopwatch_click, 0);
+    stopwatch_action = lv_obj_get_child(stopwatch_main, 0);
+    button(pages[5], "Vuelta", 270, 278, 112, 60, stopwatch_click, 1);
+    button(pages[5], LV_SYMBOL_REFRESH "  Reiniciar", 92, 338, 226, 48, stopwatch_click, -1);
 
     notice = center_label(screen, "", &lv_font_montserrat_16, PAPER, 455);
     lv_obj_set_style_bg_color(notice, lv_color_hex(INK), 0);
@@ -763,6 +831,7 @@ void aura_ui_init(void)
     lv_timer_create(tick, 250, NULL);
     lv_timer_create(battery_tick, 5000, NULL);
     lv_timer_create(wifi_tick, 1000, NULL);
+    lv_timer_create(stopwatch_tick, 50, NULL);
     wifi_tick(NULL);
 }
 
