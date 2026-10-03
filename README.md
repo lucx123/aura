@@ -4,8 +4,12 @@
 > diseñada para comprender el contexto, razonar contigo y adaptarse a tu vida.
 
 ![Status](https://img.shields.io/badge/status-en%20desarrollo-7c3aed)
-![Phase](https://img.shields.io/badge/fase-investigacion%20y%20prototipos-2563eb)
+![Phase](https://img.shields.io/badge/fase-firmware%20AURA%20Watch-2563eb)
 ![Focus](https://img.shields.io/badge/enfoque-local--first-059669)
+
+> **Prioridad actual de AURA Watch:** consolidar un firmware operativo y funcional,
+> con una interfaz fluida, herramientas útiles y un consumo de batería controlado.
+> **El siguiente paso es integrar IA** sobre esa base.
 
 ## Que es AURA
 
@@ -84,6 +88,22 @@ se validan.
 
 ## Estado actual
 
+### AURA Watch — firmware funcional antes de integrar IA
+
+Estamos desarrollando y probando primero las funciones del reloj: pantalla,
+touch, hora, menús, sensores, conectividad y gestión de energía. La versión
+**AURA Watch Basic 1.4 dev.6** ya está compilada y cargada en la placa. Incluye
+reloj, ojos interactivos, temporizador, cronómetro, ajustes y las herramientas
+de redes e ingeniería de **AURA Eclipse 0.1**.
+
+Seguimos afinando la fluidez y la estabilidad del firmware. El descanso y el
+apagado de Wi-Fi están verificados; la autonomía y la respuesta táctil necesitan
+pruebas de uso físico. Este avance prepara una base útil para la siguiente etapa.
+
+**El siguiente hito es integrar IA en AURA Watch:** conectar el reloj con el
+gateway de AURA e incorporar conversación, voz y memoria de forma gradual.
+La integración de IA, el audio y el enlace BLE con la app están pendientes.
+
 ### App Android y conexión del reloj
 
 La app propia de AURA (pendiente de desarrollo) permitirá asociar el reloj como un
@@ -100,8 +120,8 @@ Ver [app Android, conexión y plan de pruebas](docs/14-app-android-conectividad.
 
 ### Progreso documentado
 
-El proyecto se encuentra en la etapa de **investigacion, definicion de arquitectura
-y prototipos iniciales**.
+El proyecto combina investigación y diseño de arquitectura con el desarrollo de
+un **firmware funcional para AURA Watch**, como preparación para integrar IA.
 
 Actualmente hay:
 
@@ -113,111 +133,100 @@ Actualmente hay:
 - una lista de compras organizada por fases;
 - un primer prototipo de firmware para NodeMCU ESP8266 con interfaz web y LCD I2C.
 - una arquitectura definida para AURA Watch, AURA Desktop y coordinacion de voz.
-- la placa AURA Watch recibida y funcionando en una prueba inicial; falta registrar
-  que perifericos se probaron y sus resultados por separado.
-- un primer firmware propio en `firmware/aura_watch`, compilado y cargado:
-  reloj offline con ojos interactivos, hora/fecha, bateria, temporizador y ajustes;
-  pantalla y touch confirmados por el usuario.
-- AURA Watch Basic 1.4 dev.6 como linea oficial sin IA, con AURA Eclipse 0.1 y respaldo verificable,
-  interfaz para esquinas fisicas, Wi-Fi/NTP austero y personalidad mediante IMU.
-  Esta base consolida Eclipse dev.7, abre el modo hacker con siete toques en la
-  version sin password y usa un menu de dos columnas con seis apps, ajustes
-  de descanso, bateria y linterna. Eclipse agrega una comparacion de canales,
-  resumen de autenticacion Wi-Fi y calculadora IPv4/CIDR offline. Tambien optimiza
-  los dibujos, endurece el portal Wi-Fi y mueve la preparacion de microSD a otra
-  tarea. Dev.4 separa el modo hacker de su menu: volver al inicio, usar apps
-  basicas o descansar conserva Eclipse y sus resultados. La flecha de Eclipse
-  vuelve al inicio; solo "Salir de Eclipse" cierra el modo. El descanso pausa
-  escaneos y Evidence; al despertar vuelve la cara hacker sin reiniciar trabajos.
-  Reiniciar el reloj vuelve al modo normal. Dev.4 fue compilada y cargada por USB;
-  aprobo 10 comprobaciones de navegacion de Eclipse, 30 transiciones de pantalla,
-  12 desplazamientos y 24 comprobaciones de gestos, sin reintentos de lectura.
-  La prueba de funciones tambien aprobo NTP, Spectrum, apps de redes, cancelacion
-  del escaneo y limite de linterna. Evidence sigue sin poder montar la microSD.
-  Como antecedentes, dev.2 fue compilada y cargada por USB con hash verificado;
-  las pruebas de placa y 17 pruebas host aprobaron. Evidence no pudo montar
-  la microSD. Dev.3 incorporo el triple toque para bloquear y conservo el doble
-  toque para despertar; aprobo 23 comprobaciones de gestos por USB. Estos
-  resultados previos no validan la permanencia de Eclipse introducida en dev.4.
-  El touch, la fluidez del panel fisico y la autonomia siguen pendientes.
-  Dev.5 agrega RF (longitud de onda, perdida ideal en espacio libre y dBm/mW),
-  VLSM para hasta cuatro LAN y BSSID en Spectrum. Las calculadoras trabajan
-  offline y el menu Eclipse ofrece ocho herramientas.
-  La imagen dev.5 fue cargada y verificada en COM4: 22 pruebas host, 11 de
-  ingenieria, 12 de navegacion Eclipse y 24 de gestos aprobaron, junto con
-  regresion de pantalla y NTP/Spectrum/linterna. Evidence sigue sin montar SD.
-  Dev.6 reduce el coste del scroll y protege el descanso frente a cambios de
-  pantallas ocultas. Identifica la microSD como NTFS y agrega un registro interno
-  de ocho eventos, verificado y exportable por USB, para Evidence.
-  Ver [auditoria actual](firmware/aura_watch/AUDIT-2026-10-03.md) y
-  [antecedentes](firmware/aura_watch/AUDIT-2026-10-02.md).
+- la placa AURA Watch recibida, con pantalla y touch confirmados por el usuario;
+- el firmware **Basic 1.4 dev.6**, cargado por USB, con menú de dos columnas,
+  Wi-Fi/NTP, personalidad mediante IMU, triple toque para bloquear y descanso
+  que pausa el dibujo de pantalla y reduce la frecuencia de CPU;
+- **Eclipse 0.1**, accesible con siete toques en la versión, con ocho herramientas:
+  Spectrum, canales Wi-Fi, auditoría de autenticación, System Check, CIDR, RF,
+  VLSM y Evidence. El modo se conserva al volver al inicio o descansar;
+- optimización del renderizado de los menús y pruebas de navegación, gestos,
+  herramientas, persistencia y descanso. Las mediciones y sus límites están en la
+  [auditoría actual](firmware/aura_watch/AUDIT-2026-10-03.md);
+- un registro interno de ocho eventos para Evidence, verificado y exportable
+  por USB. La microSD conectada usa NTFS; FAT32/exFAT se probaron con imágenes
+  sintéticas. El historial está en los
+  [antecedentes del firmware](firmware/aura_watch/AUDIT-2026-10-02.md).
 
 ## Roadmap
 
 El roadmap es orientativo y cambiara a medida que los prototipos revelen nuevas
 restricciones.
 
+**Estados:** ✅ **Hecho** · 🟡 **En progreso** · ⬜ **Pendiente**.
+
 ### Fase 0 — Fundamentos y diseño `en progreso`
 
-- [x] Definir la vision general de AURA.
-- [x] Adoptar el nombre **Adaptive Unified Reasoning Assistant**.
-- [x] Investigar proyectos, tecnologias y stacks posibles.
-- [x] Separar la memoria de AURA en su propio repositorio.
-- [ ] Consolidar requisitos y decisiones en una arquitectura v1.
-- [ ] Definir criterios de privacidad, permisos y retencion de datos.
+- ✅ **Hecho** — Definir la vision general de AURA.
+- ✅ **Hecho** — Adoptar el nombre **Adaptive Unified Reasoning Assistant**.
+- ✅ **Hecho** — Investigar proyectos, tecnologias y stacks posibles.
+- ✅ **Hecho** — Separar la memoria de AURA en su propio repositorio.
+- ⬜ **Pendiente** — Consolidar requisitos y decisiones en una arquitectura v1.
+- ⬜ **Pendiente** — Definir criterios de privacidad, permisos y retencion de datos.
 
 ### Fase 1 — Nucleo, memoria y canales
 
-- [ ] Crear el orquestador principal.
-- [ ] Integrar entrada y salida de voz en streaming.
-- [ ] Implementar deteccion de palabra de activacion e interrupciones.
-- [ ] Conectar uno o mas modelos con failover local/cloud.
-- [ ] Definir personalidad, instrucciones y limites de AURA.
-- [ ] Integrar lectura y escritura controlada con `aura-memory`.
-- [ ] Unificar Telegram, Discord y WhatsApp mediante adaptadores de canal.
-- [ ] Crear AURA Gateway API para desacoplar dispositivos y orquestador.
+- ⬜ **Pendiente** — Crear el orquestador principal.
+- ⬜ **Pendiente** — Integrar entrada y salida de voz en streaming.
+- ⬜ **Pendiente** — Implementar deteccion de palabra de activacion e interrupciones.
+- ⬜ **Pendiente** — Conectar uno o mas modelos con failover local/cloud.
+- ⬜ **Pendiente** — Definir personalidad, instrucciones y limites de AURA.
+- ⬜ **Pendiente** — Integrar lectura y escritura controlada con `aura-memory`.
+- ⬜ **Pendiente** — Unificar Telegram, Discord y WhatsApp mediante adaptadores de canal.
+- ⬜ **Pendiente** — Crear AURA Gateway API para desacoplar dispositivos y orquestador.
 
-### Fase 2 — AURA Watch + aplicacion movil
+### Fase 2 — AURA Watch + aplicación móvil `en progreso`
 
-- [x] Adquirir la Waveshare ESP32-S3-Touch-AMOLED-2.06.
-- [x] Definir pantalla AMOLED tactil, IMU, RTC, audio, microSD y gestion de energia.
-- [x] Recibir la placa y comprobar que funciona en una prueba inicial.
-- [ ] Verificar revision, pinout y perifericos reales por separado.
-- [ ] Integrar microfono, altavoz, bateria y vibracion.
-- [ ] Crear interfaz de reloj, ojos, estados, avisos y recordatorios.
-- [ ] Implementar BLE para emparejamiento, configuracion y enlace con la app.
-- [ ] Implementar Wi-Fi para gateway directo, audio y actualizaciones OTA.
-- [ ] Detectar la wake word localmente y activar la conversacion.
-- [ ] Crear la app movil como puente BLE/Internet y superficie de permisos.
-- [ ] Validar asociación Android, reconexión y recepción con pantalla bloqueada.
-- [ ] Integrar el gateway de dispositivos con Hermes en la EC2 existente.
-- [ ] Probar audio comprimido por BLE y cambio de ruta sin mensajes duplicados.
+#### Base de firmware — prioridad actual
+
+- ✅ **Hecho** — Adquirir la Waveshare ESP32-S3-Touch-AMOLED-2.06.
+- ✅ **Hecho** — Definir pantalla AMOLED táctil, IMU, RTC, audio, microSD y gestión de energía.
+- ✅ **Hecho** — Recibir la placa y comprobar su funcionamiento inicial.
+- ✅ **Hecho** — Compilar y cargar un firmware operativo con reloj, ojos, menús, temporizador y cronómetro.
+- ✅ **Hecho** — Configurar Wi-Fi y sincronizar la hora por NTP, apagando la radio al terminar.
+- ✅ **Hecho** — Incorporar Eclipse con herramientas de redes, calculadoras y registro Evidence.
+- ✅ **Hecho** — Implementar bloqueo por triple toque y descanso con reducción de CPU y pausa del dibujo.
+- 🟡 **En progreso** — Afinar la fluidez, probar el uso cotidiano y medir la autonomía.
+- 🟡 **En progreso** — Completar la verificación de revisión, pinout y periféricos reales.
+
+#### Integración de IA — siguiente hito
+
+- ⬜ **Pendiente** — Conectar AURA Watch con el gateway e integrar IA, conversación y memoria.
+- ⬜ **Pendiente** — Integrar micrófono, altavoz y vibración.
+- ⬜ **Pendiente** — Incorporar avisos y recordatorios del asistente en la interfaz del reloj.
+- ⬜ **Pendiente** — Implementar BLE para emparejamiento, configuración y enlace con la app.
+- ⬜ **Pendiente** — Ampliar Wi-Fi para gateway directo, audio y actualizaciones OTA.
+- ⬜ **Pendiente** — Detectar la palabra de activación localmente y activar la conversación.
+- ⬜ **Pendiente** — Crear la app móvil como puente BLE/Internet y superficie de permisos.
+- ⬜ **Pendiente** — Validar asociación Android, reconexión y recepción con pantalla bloqueada.
+- ⬜ **Pendiente** — Integrar el gateway de dispositivos con Hermes en la EC2 existente.
+- ⬜ **Pendiente** — Probar audio comprimido por BLE y cambio de ruta sin mensajes duplicados.
 
 ### Fase 3 — Voz distribuida y proactividad
 
-- [ ] Compartir conversaciones y contexto entre reloj, app, robot y canales.
-- [ ] Coordinar que solo el nodo mas apropiado responda a cada wake word.
-- [ ] Añadir interrupcion de voz, prioridades y modo no molestar.
-- [ ] Implementar avisos proactivos por voz, pantalla y vibracion.
-- [ ] Aplicar niveles de autonomia segun el riesgo de cada accion.
+- ⬜ **Pendiente** — Compartir conversaciones y contexto entre reloj, app, robot y canales.
+- ⬜ **Pendiente** — Coordinar que solo el nodo mas apropiado responda a cada wake word.
+- ⬜ **Pendiente** — Añadir interrupcion de voz, prioridades y modo no molestar.
+- ⬜ **Pendiente** — Implementar avisos proactivos por voz, pantalla y vibracion.
+- ⬜ **Pendiente** — Aplicar niveles de autonomia segun el riesgo de cada accion.
 
 ### Fase 4 — AURA Desktop
 
-- [ ] Construir rostro expresivo, microfonos, altavoz y sensores de presencia.
-- [ ] Integrar camara con indicadores y controles visibles de privacidad.
-- [ ] Añadir pan-tilt, seguimiento visual y movimientos expresivos.
-- [ ] Compartir la misma identidad, memoria y voz de AURA Watch.
-- [ ] Interactuar con dispositivos y objetos autorizados del entorno.
+- ⬜ **Pendiente** — Construir rostro expresivo, microfonos, altavoz y sensores de presencia.
+- ⬜ **Pendiente** — Integrar camara con indicadores y controles visibles de privacidad.
+- ⬜ **Pendiente** — Añadir pan-tilt, seguimiento visual y movimientos expresivos.
+- ⬜ **Pendiente** — Compartir la misma identidad, memoria y voz de AURA Watch.
+- ⬜ **Pendiente** — Interactuar con dispositivos y objetos autorizados del entorno.
 
 ### Fase 5 — Autonomia y entorno fisico
 
-- [ ] Consolidar el bus de comunicacion con microcontroladores.
-- [ ] Añadir sensores y actuadores de forma incremental.
-- [ ] Diseñar alimentacion, conectividad y carcasa.
-- [ ] Evaluar movilidad, seguridad fisica y parada de emergencia.
-- [ ] Construir un prototipo integrado de AURA.
-- [ ] Integrar hogar inteligente y automatizaciones contextuales.
-- [ ] Evaluar base movil o actuadores adicionales con limites de seguridad.
+- ⬜ **Pendiente** — Consolidar el bus de comunicacion con microcontroladores.
+- ⬜ **Pendiente** — Añadir sensores y actuadores de forma incremental.
+- ⬜ **Pendiente** — Diseñar alimentacion, conectividad y carcasa.
+- ⬜ **Pendiente** — Evaluar movilidad, seguridad fisica y parada de emergencia.
+- ⬜ **Pendiente** — Construir un prototipo integrado de AURA.
+- ⬜ **Pendiente** — Integrar hogar inteligente y automatizaciones contextuales.
+- ⬜ **Pendiente** — Evaluar base movil o actuadores adicionales con limites de seguridad.
 
 ## Estructura del repositorio
 
