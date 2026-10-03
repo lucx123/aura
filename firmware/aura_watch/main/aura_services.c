@@ -18,6 +18,9 @@ static nvs_handle_t prefs;
 static bool prefs_ready, clock_ready;
 static bool clock_24h = true;
 static int brightness = 65, theme = 0, utc_offset = 0;
+static int idle_seconds = 45;
+static bool brightness_dirty, theme_dirty, format_dirty;
+static bool idle_dirty;
 
 #define AXP2101_COMMON_CONFIG 0x10
 #define AXP2101_PWROFF_EN 0x22
@@ -89,8 +92,7 @@ void aura_services_init(void)
     tzset();
     esp_err_t err = nvs_flash_init_partition("aura_cfg");
     if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND) {
-        ESP_ERROR_CHECK(nvs_flash_erase_partition("aura_cfg"));
-        err = nvs_flash_init_partition("aura_cfg");
+        ESP_LOGE(TAG, "Preferences need recovery (%s); preserving aura_cfg", esp_err_to_name(err));
     }
     prefs_ready = err == ESP_OK && nvs_open_from_partition("aura_cfg", "prefs", NVS_READWRITE, &prefs) == ESP_OK;
     int32_t value;
@@ -98,6 +100,8 @@ void aura_services_init(void)
     if (prefs_ready) {
         if (nvs_get_i32(prefs, "brightness", &value) == ESP_OK && value >= 15 && value <= 100) brightness = value;
         if (nvs_get_i32(prefs, "theme", &value) == ESP_OK && value >= 0 && value < 3) theme = value;
+        if (nvs_get_i32(prefs, "idle_seconds", &value) == ESP_OK &&
+            (value == 15 || value == 30 || value == 45 || value == 90)) idle_seconds = value;
         if (nvs_get_i32(prefs, "offset", &value) == ESP_OK && value >= -50400 && value <= 50400) utc_offset = value;
         nvs_get_u8(prefs, "rtc_utc", &rtc_is_utc);
         if (nvs_get_u8(prefs, "clock_24h", &saved_clock_24h) == ESP_OK) clock_24h = saved_clock_24h != 0;
@@ -153,6 +157,14 @@ esp_err_t aura_clock_set(time_t utc, int offset_seconds)
     uint8_t r[] = {bcd(t.tm_sec), bcd(t.tm_min), bcd(t.tm_hour), bcd(t.tm_mday),
                    (uint8_t)t.tm_wday, bcd(t.tm_mon + 1), bcd(t.tm_year - 100)};
     xSemaphoreTake(state_lock, portMAX_DELAY);
+    struct timeval tv = {.tv_sec = utc};
+    if (settimeofday(&tv, NULL) != 0) {
+        xSemaphoreGive(state_lock);
+        ESP_LOGE(TAG, "System time update failed");
+        return ESP_FAIL;
+    }
+    clock_ready = true;
+    utc_offset = offset_seconds;
     uint8_t ctrl = 0;
     esp_err_t err = read_reg(rtc, 0, &ctrl, 1);
     if (err == ESP_OK) {
@@ -160,17 +172,16 @@ esp_err_t aura_clock_set(time_t utc, int offset_seconds)
         err = write_reg(rtc, 0, &ctrl, 1);
         if (err == ESP_OK) err = write_reg(rtc, 4, r, sizeof(r));
     }
-    struct timeval tv = {.tv_sec = utc};
-    if (settimeofday(&tv, NULL) == 0) clock_ready = true;
-    utc_offset = offset_seconds;
+    esp_err_t persist = ESP_ERR_INVALID_STATE;
     if (prefs_ready) {
-        nvs_set_i32(prefs, "offset", utc_offset);
-        nvs_set_u8(prefs, "rtc_utc", err == ESP_OK ? 1 : 0);
-        nvs_commit(prefs);
+        persist = nvs_set_i32(prefs, "offset", utc_offset);
+        if (persist == ESP_OK) persist = nvs_set_u8(prefs, "rtc_utc", err == ESP_OK ? 1 : 0);
+        if (persist == ESP_OK) persist = nvs_commit(prefs);
     }
     xSemaphoreGive(state_lock);
-    ESP_LOGI(TAG, "Time synced; RTC=%s offset=%d", esp_err_to_name(err), offset_seconds);
-    return err;
+    ESP_LOGI(TAG, "System time updated; RTC=%s preferences=%s offset=%d",
+             esp_err_to_name(err), esp_err_to_name(persist), offset_seconds);
+    return err != ESP_OK ? err : persist;
 }
 
 esp_err_t aura_clock_adjust(int seconds)
@@ -204,20 +215,66 @@ void aura_battery_read(aura_battery_t *out)
     out->available = true;
     out->connected = (status[0] & (1 << 3)) != 0;
     out->usb = (status[0] & (1 << 5)) && !(status[1] & (1 << 3));
-    out->charging = (status[1] >> 5) == 1;
+    out->charging = ((status[1] >> 5) & 3) == 1;
     if (out->connected && read_reg(pmic, 0xa4, &percent, 1) == ESP_OK && percent <= 100) out->percent = percent;
 }
 
-int aura_brightness(void) { return brightness; }
-int aura_theme(void) { return theme; }
-bool aura_clock_24h(void) { return clock_24h; }
+int aura_brightness(void)
+{
+    xSemaphoreTake(state_lock, portMAX_DELAY);
+    int value = brightness;
+    xSemaphoreGive(state_lock);
+    return value;
+}
+int aura_theme(void)
+{
+    xSemaphoreTake(state_lock, portMAX_DELAY);
+    int value = theme;
+    xSemaphoreGive(state_lock);
+    return value;
+}
+bool aura_clock_24h(void)
+{
+    xSemaphoreTake(state_lock, portMAX_DELAY);
+    bool value = clock_24h;
+    xSemaphoreGive(state_lock);
+    return value;
+}
+
+static bool save_preference(const char *key, int value, bool byte)
+{
+    esp_err_t error = prefs_ready ? (byte ? nvs_set_u8(prefs, key, value) :
+                                           nvs_set_i32(prefs, key, value)) : ESP_ERR_INVALID_STATE;
+    if (error == ESP_OK) error = nvs_commit(prefs);
+    if (error != ESP_OK) ESP_LOGW(TAG, "Preference %s not saved: %s", key, esp_err_to_name(error));
+    return error == ESP_OK;
+}
+
+int aura_idle_timeout(void)
+{
+    xSemaphoreTake(state_lock, portMAX_DELAY);
+    int value = idle_seconds;
+    xSemaphoreGive(state_lock);
+    return value;
+}
+
+void aura_save_idle_timeout(int seconds)
+{
+    if (seconds != 15 && seconds != 30 && seconds != 45 && seconds != 90) return;
+    xSemaphoreTake(state_lock, portMAX_DELAY);
+    if (idle_seconds == seconds && !idle_dirty) { xSemaphoreGive(state_lock); return; }
+    idle_seconds = seconds;
+    idle_dirty = !save_preference("idle_seconds", seconds, false);
+    xSemaphoreGive(state_lock);
+}
 
 void aura_save_brightness(int value)
 {
     if (value < 15 || value > 100) return;
     xSemaphoreTake(state_lock, portMAX_DELAY);
+    if (brightness == value && !brightness_dirty) { xSemaphoreGive(state_lock); return; }
     brightness = value;
-    if (prefs_ready) { nvs_set_i32(prefs, "brightness", value); nvs_commit(prefs); }
+    brightness_dirty = !save_preference("brightness", value, false);
     xSemaphoreGive(state_lock);
 }
 
@@ -225,16 +282,18 @@ void aura_save_theme(int value)
 {
     if (value < 0 || value >= 3) return;
     xSemaphoreTake(state_lock, portMAX_DELAY);
+    if (theme == value && !theme_dirty) { xSemaphoreGive(state_lock); return; }
     theme = value;
-    if (prefs_ready) { nvs_set_i32(prefs, "theme", value); nvs_commit(prefs); }
+    theme_dirty = !save_preference("theme", value, false);
     xSemaphoreGive(state_lock);
 }
 
 void aura_save_clock_24h(bool enabled)
 {
     xSemaphoreTake(state_lock, portMAX_DELAY);
+    if (clock_24h == enabled && !format_dirty) { xSemaphoreGive(state_lock); return; }
     clock_24h = enabled;
-    if (prefs_ready) { nvs_set_u8(prefs, "clock_24h", enabled ? 1 : 0); nvs_commit(prefs); }
+    format_dirty = !save_preference("clock_24h", enabled ? 1 : 0, true);
     xSemaphoreGive(state_lock);
 }
 

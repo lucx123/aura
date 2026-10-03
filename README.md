@@ -118,8 +118,39 @@ Actualmente hay:
 - un primer firmware propio en `firmware/aura_watch`, compilado y cargado:
   reloj offline con ojos interactivos, hora/fecha, bateria, temporizador y ajustes;
   pantalla y touch confirmados por el usuario.
-- AURA Watch Basic 1.2 como linea oficial sin IA, con respaldo verificable,
+- AURA Watch Basic 1.4 dev.6 como linea oficial sin IA, con AURA Eclipse 0.1 y respaldo verificable,
   interfaz para esquinas fisicas, Wi-Fi/NTP austero y personalidad mediante IMU.
+  Esta base consolida Eclipse dev.7, abre el modo hacker con siete toques en la
+  version sin password y usa un menu de dos columnas con seis apps, ajustes
+  de descanso, bateria y linterna. Eclipse agrega una comparacion de canales,
+  resumen de autenticacion Wi-Fi y calculadora IPv4/CIDR offline. Tambien optimiza
+  los dibujos, endurece el portal Wi-Fi y mueve la preparacion de microSD a otra
+  tarea. Dev.4 separa el modo hacker de su menu: volver al inicio, usar apps
+  basicas o descansar conserva Eclipse y sus resultados. La flecha de Eclipse
+  vuelve al inicio; solo "Salir de Eclipse" cierra el modo. El descanso pausa
+  escaneos y Evidence; al despertar vuelve la cara hacker sin reiniciar trabajos.
+  Reiniciar el reloj vuelve al modo normal. Dev.4 fue compilada y cargada por USB;
+  aprobo 10 comprobaciones de navegacion de Eclipse, 30 transiciones de pantalla,
+  12 desplazamientos y 24 comprobaciones de gestos, sin reintentos de lectura.
+  La prueba de funciones tambien aprobo NTP, Spectrum, apps de redes, cancelacion
+  del escaneo y limite de linterna. Evidence sigue sin poder montar la microSD.
+  Como antecedentes, dev.2 fue compilada y cargada por USB con hash verificado;
+  las pruebas de placa y 17 pruebas host aprobaron. Evidence no pudo montar
+  la microSD. Dev.3 incorporo el triple toque para bloquear y conservo el doble
+  toque para despertar; aprobo 23 comprobaciones de gestos por USB. Estos
+  resultados previos no validan la permanencia de Eclipse introducida en dev.4.
+  El touch, la fluidez del panel fisico y la autonomia siguen pendientes.
+  Dev.5 agrega RF (longitud de onda, perdida ideal en espacio libre y dBm/mW),
+  VLSM para hasta cuatro LAN y BSSID en Spectrum. Las calculadoras trabajan
+  offline y el menu Eclipse ofrece ocho herramientas.
+  La imagen dev.5 fue cargada y verificada en COM4: 22 pruebas host, 11 de
+  ingenieria, 12 de navegacion Eclipse y 24 de gestos aprobaron, junto con
+  regresion de pantalla y NTP/Spectrum/linterna. Evidence sigue sin montar SD.
+  Dev.6 reduce el coste del scroll y protege el descanso frente a cambios de
+  pantallas ocultas. Identifica la microSD como NTFS y agrega un registro interno
+  de ocho eventos, verificado y exportable por USB, para Evidence.
+  Ver [auditoria actual](firmware/aura_watch/AUDIT-2026-10-03.md) y
+  [antecedentes](firmware/aura_watch/AUDIT-2026-10-02.md).
 
 ## Roadmap
 

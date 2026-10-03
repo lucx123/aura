@@ -29,3 +29,7 @@ firmware/aura_watch/backups/
 firmware/aura_watch/build/
 firmware/aura_watch/managed_components/
 firmware/aura_watch/sdkconfig
+firmware/**/managed_components/
+firmware/**/sdkconfig
+firmware/aura_watch/build-audit.log
+tmp/

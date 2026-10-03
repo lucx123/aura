@@ -24,6 +24,8 @@ void aura_battery_read(aura_battery_t *out);
 int aura_brightness(void);
 int aura_theme(void);
 bool aura_clock_24h(void);
+int aura_idle_timeout(void);
+void aura_save_idle_timeout(int seconds);
 void aura_save_brightness(int value);
 void aura_save_theme(int value);
 void aura_save_clock_24h(bool enabled);

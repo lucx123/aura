@@ -37,15 +37,22 @@ static void motion_task(void *unused)
     float previous_x = 0, previous_y = 0, previous_z = 9.807f;
     int shake_hits = 0;
     int64_t shake_window = 0, cooldown_until = 0;
+    int64_t last_config_error = -5000000;
 
     for (;;) {
         bool sleeping = aura_ui_is_sleeping();
         if (sleeping != low_power) {
-            qmi8658_set_accel_odr(&sensor, sleeping ?
+            esp_err_t error = qmi8658_set_accel_odr(&sensor, sleeping ?
                 QMI8658_ACCEL_ODR_LOWPOWER_21HZ : QMI8658_ACCEL_ODR_62_5HZ);
-            qmi8658_enable_sensors(&sensor, sleeping ? QMI8658_ENABLE_ACCEL :
+            if (error == ESP_OK) error = qmi8658_enable_sensors(&sensor, sleeping ? QMI8658_ENABLE_ACCEL :
                                    QMI8658_ENABLE_ACCEL | QMI8658_ENABLE_GYRO);
-            low_power = sleeping;
+            if (error == ESP_OK) low_power = sleeping;
+            else if (esp_timer_get_time() - last_config_error >= 5000000) {
+                last_config_error = esp_timer_get_time();
+                ESP_LOGW(TAG, "IMU power mode update failed; retrying: %s", esp_err_to_name(error));
+            }
+            shake_hits = 0;
+            shake_window = 0;
         }
 
         float x, y, z;
@@ -75,7 +82,7 @@ static void motion_task(void *unused)
             }
             publish(filtered_x, filtered_y, filtered_z, movement, rotation, shook);
 
-            if (!sleeping && bsp_display_lock(0)) {
+            if (!sleeping && bsp_display_lock(10)) {
                 if (shook) aura_ui_dizzy();
                 else aura_ui_motion(filtered_x, filtered_y);
                 bsp_display_unlock();
@@ -93,17 +100,22 @@ void aura_motion_init(void)
         ESP_LOGW(TAG, "QMI8658 unavailable: %s", esp_err_to_name(error));
         return;
     }
-    qmi8658_set_accel_range(&sensor, QMI8658_ACCEL_RANGE_8G);
-    qmi8658_set_accel_odr(&sensor, QMI8658_ACCEL_ODR_62_5HZ);
-    qmi8658_set_gyro_range(&sensor, QMI8658_GYRO_RANGE_512DPS);
-    qmi8658_set_gyro_odr(&sensor, QMI8658_GYRO_ODR_62_5HZ);
+    error = qmi8658_set_accel_range(&sensor, QMI8658_ACCEL_RANGE_8G);
+    if (error == ESP_OK) error = qmi8658_set_accel_odr(&sensor, QMI8658_ACCEL_ODR_62_5HZ);
+    if (error == ESP_OK) error = qmi8658_set_gyro_range(&sensor, QMI8658_GYRO_RANGE_512DPS);
+    if (error == ESP_OK) error = qmi8658_set_gyro_odr(&sensor, QMI8658_GYRO_ODR_62_5HZ);
     qmi8658_set_accel_unit_mps2(&sensor, true);
     qmi8658_set_gyro_unit_dps(&sensor, true);
-    qmi8658_enable_sensors(&sensor, QMI8658_ENABLE_ACCEL | QMI8658_ENABLE_GYRO);
+    if (error == ESP_OK) error = qmi8658_enable_sensors(&sensor, QMI8658_ENABLE_ACCEL | QMI8658_ENABLE_GYRO);
+    if (error != ESP_OK) {
+        qmi8658_enable_sensors(&sensor, 0);
+        ESP_LOGW(TAG, "QMI8658 configuration failed: %s", esp_err_to_name(error));
+        return;
+    }
     portENTER_CRITICAL(&state_lock);
     state.available = true;
     portEXIT_CRITICAL(&state_lock);
-    xTaskCreate(motion_task, "aura_motion", 4096, NULL, 3, NULL);
+    configASSERT(xTaskCreate(motion_task, "aura_motion", 4096, NULL, 3, NULL) == pdPASS);
     ESP_LOGI(TAG, "Acelerometro activo en modo austero");
 }
 
