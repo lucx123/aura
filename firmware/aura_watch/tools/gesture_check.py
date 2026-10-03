@@ -6,7 +6,7 @@ import argparse
 import json
 import pathlib
 import time
-from watch import Watch
+from watch import Watch, project_version
 from features_check import status, wait_status
 
 
@@ -32,7 +32,7 @@ def run(watch):
     wait_status(watch, lambda s: s['radio'] == '0', 60)
     watch.send('ECLIPSE_CLOSE')
     awake()
-    assert watch.display()['version'] == '1.4.0-dev.6'
+    assert watch.display()['version'] == project_version()
     tap(); tap()
     expect(False, 'two taps stay awake')
     tap()
@@ -67,7 +67,13 @@ def run(watch):
     tap(); tap(); watch.send('PAGE 1'); tap()
     expect(False, 'page change resets')
     tap(); tap()
-    expect(True, 'clock background triple locks')
+    expect(False, 'clock background triple stays awake')
+
+    for page in (1, 2, 3, 4, 5, 13, 14):
+        awake(page)
+        tap(); tap(); tap()
+        current = expect(False, f'normal PAGE {page} ignores triple lock')
+        assert current['page'] == str(page), current
 
     awake(3)
     baseline = status(watch)
@@ -89,12 +95,24 @@ def run(watch):
     assert watch.display()['eclipse'] == '0'
     for _ in range(4): tap(y=440, target=2)
     entered = watch.display()
-    assert entered['eclipse'] == '1' and entered['page'] == '6', entered
+    assert entered['eclipse'] == '1' and entered['page'] == '0' and entered['eclipse_intro'] == '1', entered
+    watch.wait_eclipse_ready()
     checks.append('seven version taps still enter Eclipse')
+
+    for page in (3, 6, 7, 8, 9, 10, 11, 12, 15, 16):
+        awake(page)
+        tap(); tap(); tap()
+        current = expect(False, f'Eclipse PAGE {page} ignores triple lock')
+        assert current['page'] == str(page) and current['eclipse'] == '1', current
+
     watch.send('PAGE 7')
     watch.send('SPECTRUM_START')
     tap(); tap(); tap()
-    locked = expect(True, 'Eclipse triple pauses tools and locks')
+    expect(False, 'Spectrum triple stays awake during scan')
+    watch.send('PAGE 0')
+    time.sleep(0.45)
+    tap(); tap(); tap()
+    locked = expect(True, 'Eclipse home triple locks')
     assert locked['eclipse'] == '1', locked
     cancelled = wait_status(watch, lambda s: s['radio'] == '0' and s['wifi'] != '6', 3)
     checks.append('Eclipse scan radio is off after lock')

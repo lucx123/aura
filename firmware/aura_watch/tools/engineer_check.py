@@ -6,7 +6,7 @@ import argparse
 import json
 import pathlib
 import time
-from watch import Watch
+from watch import Watch, project_version
 from features_check import status, wait_status
 from eclipse_navigation_check import page_body_hash
 
@@ -19,7 +19,7 @@ def run(watch, output):
 
     def expect(page, mode=True, sleeping=False):
         current = watch.display()
-        assert current['version'] == '1.4.0-dev.6', current
+        assert current['version'] == project_version(), current
         assert current['page'] == str(page) and current['eclipse'] == str(int(mode)), current
         assert current['sleeping'] == str(int(sleeping)), current
         assert status(watch)['radio'] == '0', 'Offline app enabled radio'
@@ -48,6 +48,8 @@ def run(watch, output):
     checks.append('RF and VLSM pages blocked without Eclipse')
     watch.send('PAGE 3')
     watch.send('BOOT_LONG')
+    watch.wait_eclipse_ready()
+    watch.send('PAGE 6')
     expect(6)
     watch.send('MENU_SCROLL -2000')
     time.sleep(0.6)

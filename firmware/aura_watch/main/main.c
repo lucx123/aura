@@ -86,12 +86,12 @@ static void command(char *line) {
         } else reply("AURA_ERROR display_lock_timeout\n");
     } else if (!strcmp(line,"DISPLAY")) {
         if (bsp_display_lock(1500)) {
-            reply("AURA_DISPLAY version=%s completed=%lu uptime_ms=%lld sleeping=%d page=%d eclipse=%d cpu_mhz=%d heap=%u min_heap=%u dma_free=%u reset=%d menu_y=%d evidence_busy=%d menu_cache=%u cache_stack_free=%u\n",
+            reply("AURA_DISPLAY version=%s completed=%lu uptime_ms=%lld sleeping=%d page=%d eclipse=%d cpu_mhz=%d heap=%u min_heap=%u dma_free=%u reset=%d menu_y=%d evidence_busy=%d menu_cache=%u cache_stack_free=%u eclipse_intro=%u\n",
                 esp_app_get_description()->version, (unsigned long)aura_display_completed_flushes(),
                 (long long)(esp_timer_get_time() / 1000), aura_ui_is_sleeping(),
                 aura_ui_current_page(), aura_ui_eclipse_active(), esp_clk_cpu_freq() / 1000000,
                 (unsigned)esp_get_free_heap_size(), (unsigned)esp_get_minimum_free_heap_size(),
-                (unsigned)heap_caps_get_largest_free_block(MALLOC_CAP_DMA), esp_reset_reason(), aura_ui_menu_scroll_y(), aura_ui_evidence_busy(), aura_ui_menu_cache_count(), aura_ui_menu_cache_stack_free());
+                (unsigned)heap_caps_get_largest_free_block(MALLOC_CAP_DMA), esp_reset_reason(), aura_ui_menu_scroll_y(), aura_ui_evidence_busy(), aura_ui_menu_cache_count(), aura_ui_menu_cache_stack_free(), aura_ui_eclipse_intro_stage());
             bsp_display_unlock();
         } else reply("AURA_ERROR display_lock_timeout\n");
     } else if (!strcmp(line,"WIFI_SETUP")) {
@@ -105,9 +105,9 @@ static void command(char *line) {
         if (!strcmp(line,"SCREEN")) aura_ui_dump_screen();
         else if (!strncmp(line,"TAP ",4)) {
             int x, y, target; char extra;
-            if (sscanf(line+4,"%d %d %d %c",&x,&y,&target,&extra)==3 && x>=0 && x<410 && y>=0 && y<502 && target>=0 && target<=3)
+            if (sscanf(line+4,"%d %d %d %c",&x,&y,&target,&extra)==3 && x>=0 && x<410 && y>=0 && y<502 && target>=0 && target<=4)
                 aura_ui_diagnostic_tap(x,y,target);
-            else reply("AURA_ERROR TAP requires x y target (0..3)\n");
+            else reply("AURA_ERROR TAP requires x y target (0..4)\n");
         }
         else if (!strncmp(line,"DRAG ",5)) {
             int x, y, end_x, end_y; char extra;

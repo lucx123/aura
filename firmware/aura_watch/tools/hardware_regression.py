@@ -6,7 +6,7 @@ import argparse
 import json
 import pathlib
 import time
-from watch import Watch
+from watch import Watch, project_version
 
 
 def run(watch, expected):
@@ -54,8 +54,10 @@ def run(watch, expected):
     assert watch.display()['eclipse'] == '0', 'Expired gesture opened Eclipse'
     for _ in range(6):
         watch.send('VERSION_TAP')
-    entered = watch.display()
-    assert entered['page'] == '6' and entered['eclipse'] == '1', 'Seven taps failed'
+    entering = watch.display()
+    assert entering['page'] == '0' and entering['eclipse'] == '1' and entering['eclipse_intro'] == '1', entering
+    entered = watch.wait_eclipse_ready()
+    assert entered['page'] == '0' and entered['eclipse'] == '1', 'Seven taps failed'
     for page in (7, 8, 9, 10, 11, 12, 15, 16, 6):
         watch.send(f'PAGE {page}')
         time.sleep(0.25)
@@ -65,7 +67,7 @@ def run(watch, expected):
     assert closed['eclipse'] == '0' and closed['page'] == '0', 'Close did not end Eclipse'
     watch.send('PAGE 3')
     watch.send('BOOT_LONG')
-    assert watch.display()['eclipse'] == '1', 'BOOT shortcut failed'
+    assert watch.wait_eclipse_ready()['eclipse'] == '1', 'BOOT shortcut failed'
     watch.send('SLEEP')
     time.sleep(1)
     start = watch.display()
@@ -106,7 +108,7 @@ def run(watch, expected):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--port', default='COM4')
-    parser.add_argument('--expected-version', default='1.4.0-dev.6')
+    parser.add_argument('--expected-version', default=project_version())
     parser.add_argument('--output', default='build/hardware-regression.json')
     args = parser.parse_args()
     watch = Watch(args.port)

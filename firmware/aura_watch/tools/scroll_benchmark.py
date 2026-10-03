@@ -25,6 +25,7 @@ def run(watch):
         if page == 6:
             watch.send('PAGE 3')
             watch.send('BOOT_LONG')
+            watch.wait_eclipse_ready()
         watch.send(f'PAGE {page}')
         watch.send('MENU_SCROLL -2000')
         time.sleep(0.5)

@@ -4,7 +4,7 @@ import json
 import pathlib
 import re
 import time
-from watch import Watch
+from watch import Watch, project_version
 
 
 def storage(watch):
@@ -54,10 +54,10 @@ def run(watch, output, repeats):
     time.sleep(1.1)
     watch.send('WAKE'); watch.send('ECLIPSE_CLOSE')
     baseline = watch.display()
-    assert baseline['version'] == '1.4.0-dev.6', baseline
+    assert baseline['version'] == project_version(), baseline
     prefs = preferences(watch)
     denied_export(watch)
-    watch.send('PAGE 3'); watch.send('BOOT_LONG'); watch.send('PAGE 9')
+    watch.send('PAGE 3'); watch.send('BOOT_LONG'); watch.wait_eclipse_ready(); watch.send('PAGE 9')
     prior_path, prior_count = watch.evidence_export(output/'evidence-before-check.jsonl')
     prior_records = [json.loads(line) for line in prior_path.read_text(encoding='utf-8').splitlines()]
     prior_sequence = int(storage(watch)['internal_records'])

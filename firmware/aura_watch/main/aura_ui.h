@@ -4,6 +4,8 @@
 
 int aura_ui_current_page(void);
 bool aura_ui_eclipse_active(void);
+// 0 idle, 1 entry question, 2 Eclipse/version confirmation. Hold bsp_display_lock().
+unsigned aura_ui_eclipse_intro_stage(void);
 unsigned aura_ui_menu_cache_count(void);
 unsigned aura_ui_menu_cache_stack_free(void);
 
@@ -16,7 +18,7 @@ void aura_ui_power_short(void);
 void aura_ui_power_long(void);
 void aura_ui_power_release(void);
 void aura_ui_boot_long(void);
-// Seven taps on the menu version within five seconds open Eclipse directly.
+// Seven version taps within five seconds start a timed intro, then Eclipse home.
 void aura_ui_version_tap(void);
 void aura_ui_eclipse_close(void);
 void aura_ui_spectrum_start(void);
@@ -36,7 +38,7 @@ void aura_ui_menu_scroll(int pixels);
 // Read Eclipse when page 6 is visible, otherwise Aura. Hold bsp_display_lock().
 int aura_ui_menu_scroll_y(void);
 bool aura_ui_is_sleeping(void);
-// Diagnostic LVGL tap: target 0 background, 1 slider, 2 version, 3 Aura face.
+// Diagnostic LVGL tap: 0 background, 1 slider, 2 version, 3 Aura face, 4 intro OK.
 // Simulates events; does not verify the physical touch controller.
 void aura_ui_diagnostic_tap(int x, int y, int target_kind);
 void aura_ui_diagnostic_drag(int x, int y, int end_x, int end_y);

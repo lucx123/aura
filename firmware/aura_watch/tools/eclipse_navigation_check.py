@@ -6,7 +6,7 @@ import pathlib
 import struct
 import time
 import zlib
-from watch import Watch
+from watch import Watch, project_version
 from features_check import status, wait_status
 
 
@@ -38,18 +38,21 @@ def run(watch, output):
     watch.send('ECLIPSE_CLOSE')
     watch.send('PAGE 3')
     watch.send('BOOT_LONG')
+    watch.wait_eclipse_ready()
 
     def expect(page, mode=True):
         current = watch.display()
-        assert current['version'] == '1.4.0-dev.6', current
+        assert current['version'] == project_version(), current
         assert current['page'] == str(page) and current['eclipse'] == str(int(mode)), current
         return current
 
-    expect(6)
-    watch.send('PWR_SHORT')
     expect(0)
     time.sleep(0.4)
     watch.screenshot(output / 'home-hacker.png')
+    watch.send('PWR_SHORT')
+    expect(6)
+    watch.send('PWR_SHORT')
+    expect(0)
     watch.send('PWR_SHORT')
     expect(6)
     checks.append('PWR closes menu and reopens Eclipse without ending mode')
@@ -110,9 +113,11 @@ def run(watch, output):
 
     watch.send('PAGE 3')
     watch.send('BOOT_LONG')
+    watch.wait_eclipse_ready()
     cache_unchanged('BOOT reentry retains cache')
     watch.send('PAGE 3')
     for _ in range(7): watch.send('VERSION_TAP')
+    watch.wait_eclipse_ready()
     cache_unchanged('seven version taps retain existing session')
 
     watch.send('SLEEP')

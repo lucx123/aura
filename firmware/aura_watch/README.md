@@ -1,21 +1,31 @@
-# AURA Watch Basic 1.4 dev.6
+# AURA Watch Basic 1.4 dev.8
 
 Firmware en desarrollo para Waveshare ESP32-S3-Touch-AMOLED-2.06: reloj y
 companero local con RTC, IMU, Wi-Fi/NTP bajo demanda y herramientas de ingenieria.
 El alcance original esta en [`BASIC-1.0.md`](BASIC-1.0.md).
 
-Dev.6 reduce el trabajo del scroll, reutiliza las tarjetas estaticas del menu,
-protege el descanso frente a invalidaciones y evita que el mareo por IMU saque
-de una herramienta. El acceso a Eclipse sigue siendo de siete toques, sin clave;
-volver al inicio conserva el modo. Tres toques sobre el fondo bloquean y dos
-despiertan.
+Dev.8 permite confirmar la entrada a Eclipse con **OK**. Siete toques en
+la version muestran una pregunta durante 1,4 segundos y una confirmacion con
+la version y un boton **OK** para pasar al inicio con Eclipse activo. Si no
+pulsas OK, avanza sola despues de cuatro segundos en esa confirmacion.
+La introduccion retiene toques adicionales y espera 600 ms sin contacto antes
+de habilitar OK o completar el avance automatico. Centro Aura y Eclipse siempre se abren arriba, sin conservar
+scroll ni inercia. El triple toque bloquea solamente en la pantalla principal;
+dos toques despiertan. La entrada sigue sin clave y volver al inicio conserva
+el modo.
+
+Se conservan la cache de tarjetas y las optimizaciones de scroll y descanso de
+dev.6. La transicion usa la tarea de animacion existente y no mantiene trabajo
+adicional una vez cerrada ni durante el descanso.
 
 La microSD conectada fue identificada como NTFS, de 31,9 GB, incompatible con
 FatFs. Evidence ahora dispone de un registro interno de los ultimos ocho eventos,
 con lectura de verificacion y exportacion USB. La tarjeta conserva su formato.
 El componente local FatFs agrega exFAT, probado con imagenes sinteticas en el PC.
-Las pruebas y mediciones actuales estan en
-[`AUDIT-2026-10-03.md`](AUDIT-2026-10-03.md); las versiones anteriores se documentan
+La correccion de acceso se documenta en
+[`AUDIT-2026-10-03-dev8.md`](AUDIT-2026-10-03-dev8.md). La correccion inicial esta en
+[`AUDIT-2026-10-03-dev7.md`](AUDIT-2026-10-03-dev7.md). Las mediciones de dev.6 estan
+en [`AUDIT-2026-10-03.md`](AUDIT-2026-10-03.md); las versiones anteriores se documentan
 en [`AUDIT-2026-10-02.md`](AUDIT-2026-10-02.md). El tacto fisico y la autonomia
 requieren pruebas directas.
 
@@ -36,9 +46,12 @@ requieren pruebas directas.
 - **Centro Aura:** menu compacto de dos columnas con tarjetas, iconos y textos
   cortos para Wi-Fi, temporizador, cronometro, reloj, bateria y linterna. Tambien
   permite cambiar formato 12/24 h, apariencia, brillo y tiempo de descanso.
-  En modo normal se abre con un toque corto en PWR.
+  En modo normal se abre con un toque corto en PWR. Siempre comienza arriba.
 - **AURA Eclipse 0.1:** modo hacker local y oculto. Siete toques en la version
-  dentro de cinco segundos abren Eclipse directamente, sin PIN o password.
+  dentro de cinco segundos activan Eclipse sin PIN o password. Se muestra
+  "Que estas haciendo?", luego "Entraste a Eclipse" con la version, y se llega
+  a la pantalla principal al pulsar **OK** o tras cuatro segundos. PWR abre
+  despues su menu desde arriba.
   Su menu de ocho tarjetas incluye Spectrum, Canales 2.4, Auditoria Wi-Fi,
   calculadoras IPv4/CIDR, RF y VLSM, diagnostico de hardware y preparacion de
   registros locales. Spectrum muestra el BSSID para distinguir AP con el mismo SSID.
@@ -61,9 +74,11 @@ requieren pruebas directas.
   Dos toques rapidos y cercanos despiertan la interfaz. Descansar conserva el
   modo Eclipse y su cache, cancela trabajos pendientes de sus herramientas y
   vuelve al inicio hacker al despertar. Los trabajos no se reinician solos.
-- Tres toques rapidos y cercanos sobre el fondo o la cara de Aura bloquean
+- Tres toques rapidos y cercanos sobre el fondo o la cara de Aura, solamente
+  en la pantalla principal, bloquean
   y apagan la pantalla. Deben completarse dentro de 0,75 segundos y en un radio
-  de 40 pixeles. Botones, teclado, slider y version quedan excluidos.
+  de 40 pixeles. Menus, apps, botones, teclado, slider, version e introduccion
+  de Eclipse quedan excluidos.
   Arrastrar, mantener el dedo o cambiar de pagina reinicia la secuencia.
   Un breve margen de 400 ms evita despertar por toques extra tras el bloqueo,
   o volver a bloquear por el tercer toque tras despertar.
@@ -194,12 +209,20 @@ usar una app basica o descansar conserva el modo y la cache de redes, mientras
 cancela los trabajos pendientes. Regresar al menu de Eclipse no crea otra sesion
 ni borra resultados. "Salir de Eclipse", `ECLIPSE_CLOSE` o reiniciar el reloj
 terminan el modo; su estado no se guarda entre arranques.
+La entrada muestra dos etapas antes de dejar visible la pantalla principal.
+La confirmacion tiene **OK** para avanzar y un timeout de cuatro segundos.
+Mientras la introduccion esta visible se ignoran la navegacion y los toques de
+otros controles. Dormir o cerrar Eclipse cancela la introduccion; una alarma del timer
+tiene prioridad y abre su pagina. Cada apertura de Centro Aura o Eclipse
+reinicia el scroll a cero y cancela animaciones e inercia pendientes.
 `PAGE` se rechaza mientras la pantalla duerme: despiertala antes de cambiar de
 pagina por USB. Esto conserva el panel apagado, la CPU a 80 MHz y las transferencias
 DMA detenidas durante el descanso.
 
 El comando `DISPLAY` permite comprobar pagina, actividad del panel, descanso,
 modo `eclipse`, CPU, memoria y posicion vertical del menu `menu_y`.
+`eclipse_intro=1` indica la pregunta inicial; `2`, la confirmacion con version;
+`0`, la introduccion inactiva.
 `eclipse=1` tambien se conserva en el inicio, las apps basicas y el descanso.
 Estos datos ayudan a reproducir una falla de navegacion.
 
@@ -207,7 +230,7 @@ Comandos adicionales de diagnostico:
 
 | Comando USB | Uso |
 | --- | --- |
-| `VERSION_TAP` | Un toque en la version; siete rapidos abren Eclipse |
+| `VERSION_TAP` | Un toque en la version; siete rapidos muestran la introduccion y llegan al inicio de Eclipse |
 | `MENU_SCROLL n` | Desplaza el menu en `n` pixeles, entre -2000 y 2000 |
 | `ECLIPSE_CLOSE` | Cierra Eclipse y restaura Aura normal |
 | `SPECTRUM_START` | Escanea con Eclipse activo y pantalla despierta en Spectrum, Canales o Auditoria |
@@ -291,6 +314,7 @@ Base de hardware y registros contrastados con los
 ## Verificacion
 
 ```powershell
+python tools/eclipse_entry_check.py --port COM4 --output build/dev8
 python tools/hardware_regression.py --port COM4
 python tools/features_check.py --port COM4
 python tools/gesture_check.py --port COM4
@@ -306,21 +330,21 @@ python tests/test_fatfs.py --cc C:/ruta/a/zig.exe
 
 El benchmark mide ciclos LVGL en el MCU; el touch, los FPS fisicos y el consumo
 se comprueban directamente en el reloj. Los resultados actuales, limites y hash
-de la imagen estan en [`AUDIT-2026-10-03.md`](AUDIT-2026-10-03.md).
+de la imagen estan en [`AUDIT-2026-10-03-dev8.md`](AUDIT-2026-10-03-dev8.md).
 El portal de cinco minutos conserva las pruebas anteriores porque su codigo
-no cambio en dev.6. La tabla de particiones mantiene sus offsets y la app se
+no cambio en dev.8. La tabla de particiones mantiene sus offsets y la app se
 actualiza en `0x10000`, conservando preferencias. OTA con rollback sigue pendiente.
 
 ## Paquete local
 
-Tras compilar dev.6, verificar la imagen y registrar sus pruebas:
+Tras compilar dev.8, verificar la imagen y registrar sus pruebas en `build/dev8`:
 
 ```powershell
-python tools/package_release.py
+python tools/package_release.py --verification-dir build/dev8
 ```
 
 El script usa la version del proyecto para generar el archivo; para dev.6 el
-nombre previsto es `build/aura-watch-1.4.0-dev.6.zip`. Incluye la aplicacion,
+nombre previsto es `build/aura-watch-1.4.0-dev.8.zip`. Incluye la aplicacion,
 fuentes, documentacion, informes, capturas del menu y un SHA-256 separado.
 Los respaldos NVS y las capturas con redes cercanas quedan fuera del paquete.
 `LEEME.txt` indica la carga de la app en `0x10000` para esta unidad,

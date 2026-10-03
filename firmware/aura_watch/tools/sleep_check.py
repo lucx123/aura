@@ -10,6 +10,7 @@ from storage_check import storage
 
 def run(watch):
     watch.send('WAKE'); watch.send('PAGE 3'); watch.send('BOOT_LONG')
+    watch.wait_eclipse_ready()
     watch.send('SLEEP'); time.sleep(0.6)
     baseline = watch.display(); draw(watch,True)
     watch.send('ECLIPSE_CLOSE')  # Changes hidden screen styles and invalidates LVGL.
@@ -26,7 +27,7 @@ def run(watch):
     watch.send('WAKE'); time.sleep(0.4)
     awake = watch.display()
     assert awake['sleeping'] == '0' and int(awake['completed']) > int(asleep['completed'])
-    watch.send('PAGE 3'); watch.send('BOOT_LONG'); watch.send('PAGE 15')
+    watch.send('PAGE 3'); watch.send('BOOT_LONG'); watch.wait_eclipse_ready(); watch.send('PAGE 15')
     watch.send('RF 915,10,-5'); watch.send('ENGINEER_KEY -1'); time.sleep(0.2)
     watch.send('DIZZY'); time.sleep(0.3)
     editor = watch.display(); assert editor['page'] == '15' and editor['eclipse'] == '1',editor

@@ -19,7 +19,7 @@ def main():
         watch.send('MENU_SCROLL -2000');shot('menu-top.png')
         watch.send('MENU_SCROLL 2000');shot('menu-bottom.png')
         watch.send('PAGE 13');shot('battery.png')
-        watch.send('PAGE 3');watch.send('BOOT_LONG');watch.send('MENU_SCROLL -2000');shot('eclipse.png')
+        watch.send('PAGE 3');watch.send('BOOT_LONG');watch.wait_eclipse_ready();watch.send('PAGE 6');shot('eclipse.png')
         watch.send('MENU_SCROLL 2000');shot('eclipse-bottom.png')
         watch.send('PAGE 12');watch.send('CIDR 192.168.1.10/24');shot('cidr.png')
         watch.send('PAGE 15');watch.send('RF 2400,100,-20');shot('rf.png')

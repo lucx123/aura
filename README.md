@@ -92,9 +92,12 @@ se validan.
 
 Estamos desarrollando y probando primero las funciones del reloj: pantalla,
 touch, hora, menús, sensores, conectividad y gestión de energía. La versión
-**AURA Watch Basic 1.4 dev.6** ya está compilada y cargada en la placa. Incluye
+**AURA Watch Basic 1.4 dev.8** ya está compilada y cargada en la placa. Incluye
 reloj, ojos interactivos, temporizador, cronómetro, ajustes y las herramientas
-de redes e ingeniería de **AURA Eclipse 0.1**.
+de redes e ingeniería de **AURA Eclipse 0.1**. Los menús siempre comienzan arriba;
+entrar a Eclipse muestra una introducción con la versión y llega al inicio al
+pulsar **OK** o tras cuatro segundos en la confirmación.
+El triple toque bloquea solamente desde la pantalla principal.
 
 Seguimos afinando la fluidez y la estabilidad del firmware. El descanso y el
 apagado de Wi-Fi están verificados; la autonomía y la respuesta táctil necesitan
@@ -134,15 +137,18 @@ Actualmente hay:
 - un primer prototipo de firmware para NodeMCU ESP8266 con interfaz web y LCD I2C.
 - una arquitectura definida para AURA Watch, AURA Desktop y coordinacion de voz.
 - la placa AURA Watch recibida, con pantalla y touch confirmados por el usuario;
-- el firmware **Basic 1.4 dev.6**, cargado por USB, con menú de dos columnas,
-  Wi-Fi/NTP, personalidad mediante IMU, triple toque para bloquear y descanso
+- el firmware **Basic 1.4 dev.8**, cargado por USB, con menú de dos columnas,
+  Wi-Fi/NTP, personalidad mediante IMU, triple toque para bloquear desde el inicio y descanso
   que pausa el dibujo de pantalla y reduce la frecuencia de CPU;
 - **Eclipse 0.1**, accesible con siete toques en la versión, con ocho herramientas:
   Spectrum, canales Wi-Fi, auditoría de autenticación, System Check, CIDR, RF,
-  VLSM y Evidence. El modo se conserva al volver al inicio o descansar;
+  VLSM y Evidence. La entrada incluye mensajes y protección frente a taps sobrantes.
+  El modo se conserva al volver al inicio o descansar;
 - optimización del renderizado de los menús y pruebas de navegación, gestos,
   herramientas, persistencia y descanso. Las mediciones y sus límites están en la
-  [auditoría actual](firmware/aura_watch/AUDIT-2026-10-03.md);
+  [auditoría de dev.6](firmware/aura_watch/AUDIT-2026-10-03.md) y la
+  [corrección de entrada en dev.7](firmware/aura_watch/AUDIT-2026-10-03-dev7.md) y la
+  [confirmación con OK en dev.8](firmware/aura_watch/AUDIT-2026-10-03-dev8.md);
 - un registro interno de ocho eventos para Evidence, verificado y exportable
   por USB. La microSD conectada usa NTFS; FAT32/exFAT se probaron con imágenes
   sintéticas. El historial está en los
@@ -185,7 +191,7 @@ restricciones.
 - ✅ **Hecho** — Compilar y cargar un firmware operativo con reloj, ojos, menús, temporizador y cronómetro.
 - ✅ **Hecho** — Configurar Wi-Fi y sincronizar la hora por NTP, apagando la radio al terminar.
 - ✅ **Hecho** — Incorporar Eclipse con herramientas de redes, calculadoras y registro Evidence.
-- ✅ **Hecho** — Implementar bloqueo por triple toque y descanso con reducción de CPU y pausa del dibujo.
+- ✅ **Hecho** — Implementar bloqueo por triple toque en la pantalla principal y descanso con reducción de CPU y pausa del dibujo.
 - 🟡 **En progreso** — Afinar la fluidez, probar el uso cotidiano y medir la autonomía.
 - 🟡 **En progreso** — Completar la verificación de revisión, pinout y periféricos reales.
 

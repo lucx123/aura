@@ -46,8 +46,9 @@ def run(watch, output):
     time.sleep(0.6)
     watch.screenshot(output / 'menu-bottom.png')
     for _ in range(7): watch.send('VERSION_TAP')
-    time.sleep(0.5)
+    watch.wait_eclipse_ready()
     assert watch.display()['eclipse'] == '1'
+    watch.send('PAGE 6')
     watch.screenshot(output / 'eclipse.png')
     watch.send('PAGE 7')
     watch.send('SPECTRUM_START')
@@ -81,6 +82,7 @@ def run(watch, output):
                              'status': cancelled}
     watch.send('PAGE 3')
     watch.send('BOOT_LONG')
+    watch.wait_eclipse_ready()
     watch.send('PAGE 9')
     checked = evidence(watch)
     time.sleep(1.1)

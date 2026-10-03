@@ -4,10 +4,15 @@ import datetime
 import ipaddress
 import json
 import pathlib
+import re
 import struct
 import time
 import zlib
 import serial
+
+def project_version():
+    config = pathlib.Path(__file__).resolve().parents[1] / 'CMakeLists.txt'
+    return re.search(r'set\(PROJECT_VER\s+"([^"]+)"\)', config.read_text()).group(1)
 
 class Watch:
     def __init__(self, port='COM4'):
@@ -49,6 +54,17 @@ class Watch:
                 if attempt: raise
                 self.read_retries += 1
                 time.sleep(0.2)
+
+    def wait_eclipse_ready(self, timeout=10):
+        """Wait for the visible introduction and the final touch guard to finish."""
+        deadline = time.monotonic() + timeout
+        while time.monotonic() < deadline:
+            current = self.display()
+            if current['eclipse'] == '1' and current.get('eclipse_intro', '0') == '0':
+                time.sleep(0.65)
+                return self.display()
+            time.sleep(0.1)
+        raise TimeoutError(f'Eclipse introduction did not finish: {current}')
 
     def evidence_export(self, output):
         self.send('EVIDENCE_EXPORT')

@@ -14,6 +14,7 @@
 #include <stdint.h>
 #include <stdatomic.h>
 #include "esp_pm.h"
+#include "esp_app_desc.h"
 #include <string.h>
 #include "esp_err.h"
 #include "bsp/display.h"
@@ -32,6 +33,9 @@
 #define PAGE_HEIGHT 420
 #define PAGE_COUNT 17
 #define ECLIPSE_GREEN 0x60ff9d
+#define ECLIPSE_QUESTION_US 1400000
+#define ECLIPSE_CONFIRMATION_US 4000000
+#define ECLIPSE_TOUCH_QUIET_US 600000
 #define PI 3.14159265358979323846f
 
 static const uint32_t colors[] = {0x8af2dd, 0xb6a2ff, 0xffd495};
@@ -76,6 +80,10 @@ static int version_taps;
 static int64_t version_tap_until;
 static int reaction;
 static bool eclipse_active;
+static lv_obj_t *eclipse_intro, *eclipse_intro_title, *eclipse_intro_detail, *eclipse_intro_hint, *eclipse_intro_ok;
+static unsigned eclipse_intro_stage;
+static int64_t eclipse_intro_until, eclipse_intro_touch_until;
+static bool eclipse_intro_ok_ready, eclipse_intro_ok_pressed;
 static lv_obj_t *spectrum_text, *system_text, *evidence_text, *evidence_action;
 static lv_obj_t *channels_text, *security_text, *cidr_text, *cidr_input_label, *cidr_keyboard;
 static bool cidr_editing;
@@ -238,6 +246,100 @@ static void show_notice(const char *text)
     notice_until = now_us() + 2200000;
 }
 
+static void eclipse_intro_cancel(void)
+{
+    if (eclipse_intro_stage) {
+        touch_wake_guard_until = now_us() + ECLIPSE_TOUCH_QUIET_US;
+        tap_cancelled = true;
+        lock_taps = 0;
+        lock_tap_started = 0;
+        for (lv_indev_t *input = lv_indev_get_next(NULL); input; input = lv_indev_get_next(input)) {
+            if (lv_indev_get_type(input) == LV_INDEV_TYPE_POINTER &&
+                lv_indev_get_state(input) == LV_INDEV_STATE_PRESSED) lv_indev_wait_release(input);
+        }
+    }
+    eclipse_intro_stage = 0;
+    eclipse_intro_until = 0;
+    eclipse_intro_touch_until = 0;
+    eclipse_intro_ok_ready = false;
+    eclipse_intro_ok_pressed = false;
+    if (eclipse_intro_ok) {
+        lv_obj_add_flag(eclipse_intro_ok, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_state(eclipse_intro_ok, LV_STATE_DISABLED);
+    }
+    if (eclipse_intro) lv_obj_add_flag(eclipse_intro, LV_OBJ_FLAG_HIDDEN);
+}
+
+static void eclipse_intro_finish(void)
+{
+    eclipse_intro_cancel();
+    touch_wake_guard_until = now_us() + 400000;
+    aura_ui_page(0);
+}
+
+static void eclipse_intro_ok_event(lv_event_t *e)
+{
+    lv_event_code_t code = lv_event_get_code(e);
+    if (code == LV_EVENT_PRESSED) {
+        // Accept a fresh press after the entry taps and any held finger ended.
+        eclipse_intro_ok_pressed = eclipse_intro_stage == 2 && eclipse_intro_ok_ready &&
+                                  !sleeping && !power_hold_active;
+    } else if (code == LV_EVENT_PRESS_LOST || code == LV_EVENT_SCROLL_BEGIN) {
+        eclipse_intro_ok_pressed = false;
+    } else if (code == LV_EVENT_CLICKED) {
+        bool accepted = eclipse_intro_ok_pressed;
+        eclipse_intro_ok_pressed = false;
+        if (accepted && eclipse_intro_stage == 2 && !sleeping && !power_hold_active)
+            eclipse_intro_finish();
+    }
+}
+
+static void eclipse_intro_touch(lv_event_t *e)
+{
+    if (!eclipse_intro_stage) return;
+    lv_event_code_t code = lv_event_get_code(e);
+    if (code == LV_EVENT_PRESSED || code == LV_EVENT_PRESSING ||
+        code == LV_EVENT_RELEASED || code == LV_EVENT_PRESS_LOST ||
+        code == LV_EVENT_SHORT_CLICKED || code == LV_EVENT_CLICKED) {
+        last_activity = now_us();
+        eclipse_intro_touch_until = last_activity + ECLIPSE_TOUCH_QUIET_US;
+    }
+}
+
+static void eclipse_intro_tick(int64_t now)
+{
+    if (!eclipse_intro_stage || sleeping) return;
+    bool pressed = false;
+    for (lv_indev_t *input = lv_indev_get_next(NULL); input; input = lv_indev_get_next(input)) {
+        if (lv_indev_get_type(input) == LV_INDEV_TYPE_POINTER &&
+            lv_indev_get_state(input) == LV_INDEV_STATE_PRESSED) pressed = true;
+    }
+    // Keep the modal until the last physical contact has ended, including holds.
+    if (pressed) eclipse_intro_touch_until = now + ECLIPSE_TOUCH_QUIET_US;
+    if (eclipse_intro_stage == 2 && !eclipse_intro_ok_ready && !pressed &&
+        !power_hold_active && now >= eclipse_intro_touch_until) {
+        eclipse_intro_ok_ready = true;
+        lv_obj_remove_state(eclipse_intro_ok, LV_STATE_DISABLED);
+    }
+    if (now < eclipse_intro_until) return;
+    if (eclipse_intro_stage == 1) {
+        eclipse_intro_stage = 2;
+        eclipse_intro_until = now + ECLIPSE_CONFIRMATION_US;
+        set_text(eclipse_intro_title, "Entraste a Eclipse");
+        char version[64];
+        snprintf(version, sizeof(version), "AURA Watch %s", esp_app_get_description()->version);
+        set_text(eclipse_intro_detail, version);
+        set_text(eclipse_intro_hint, "Continua con OK\no espera 4 segundos.");
+        eclipse_intro_ok_ready = false;
+        eclipse_intro_ok_pressed = false;
+        lv_obj_add_state(eclipse_intro_ok, LV_STATE_DISABLED);
+        lv_obj_remove_flag(eclipse_intro_ok, LV_OBJ_FLAG_HIDDEN);
+        return;
+    }
+    if (pressed || now < eclipse_intro_touch_until || power_hold_active) return;
+    eclipse_intro_finish();
+}
+
 static void eclipse_pause_tools(void)
 {
     if (!eclipse_active) return;
@@ -264,6 +366,7 @@ static void eclipse_end(void)
 void aura_ui_eclipse_close(void)
 {
     if (!eclipse_active) return;
+    eclipse_intro_cancel();
     eclipse_end();
     aura_ui_page(0);
 }
@@ -277,12 +380,13 @@ static void eclipse_home(lv_event_t *e)
 static void eclipse_close(lv_event_t *e)
 {
     (void)e;
+    if (wake_only()) return;
     aura_ui_eclipse_close();
 }
 
 static void tool_open(lv_event_t *e)
 {
-    if (eclipse_active) aura_ui_page((int)(intptr_t)lv_event_get_user_data(e));
+    if (eclipse_active && !wake_only()) aura_ui_page((int)(intptr_t)lv_event_get_user_data(e));
 }
 
 void aura_ui_spectrum_start(void)
@@ -620,7 +724,8 @@ static void eclipse_enter(void)
 {
     version_taps = 0;
     version_tap_until = 0;
-    if (eclipse_active) { aura_ui_page(6); return; }
+    if (eclipse_intro_stage) return;
+    if (eclipse_active) { aura_ui_page(0); return; }
     aura_wifi_scan_t scan;
     aura_wifi_get_scan(&scan);
     aura_network_tools_session_start(scan.generation);
@@ -630,12 +735,26 @@ static void eclipse_enter(void)
     set_text(channels_text, "Toca Escanear para comparar\nlos canales 1, 6 y 11.");
     set_text(security_text, "Toca Escanear para revisar\nla seguridad anunciada por Wi-Fi.");
     eclipse_appearance(true);
-    aura_ui_page(6);
+    eclipse_intro_stage = 1;
+    eclipse_intro_until = now_us() + ECLIPSE_QUESTION_US;
+    eclipse_intro_touch_until = now_us() + ECLIPSE_TOUCH_QUIET_US;
+    set_text(eclipse_intro_title, "Que estas haciendo?");
+    set_text(eclipse_intro_detail, "Encontraste la entrada oculta.");
+    set_text(eclipse_intro_hint, "Preparando Eclipse...");
+    lv_obj_remove_flag(eclipse_intro, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_move_foreground(eclipse_intro);
+    aura_ui_page(0);
+    // A timer alarm raised by the page refresh has priority over this intro.
+    if (!eclipse_intro_stage) return;
+    // Discard the old pressed object before the overlay receives new touches.
+    for (lv_indev_t *input = lv_indev_get_next(NULL); input; input = lv_indev_get_next(input)) {
+        if (lv_indev_get_type(input) == LV_INDEV_TYPE_POINTER) lv_indev_wait_release(input);
+    }
 }
 
 void aura_ui_version_tap(void)
 {
-    if (sleeping || current_page != 3) return;
+    if (sleeping || eclipse_intro_stage || current_page != 3) return;
     int64_t now = now_us();
     if (now < touch_wake_guard_until) return;
     if (!version_taps || now >= version_tap_until) {
@@ -655,7 +774,7 @@ static void version_click(lv_event_t *e)
 
 void aura_ui_menu_scroll(int pixels)
 {
-    if (sleeping || (current_page != 3 && current_page != 6) || !pixels) return;
+    if (sleeping || eclipse_intro_stage || (current_page != 3 && current_page != 6) || !pixels) return;
     lv_obj_t *menu = pages[current_page];
     lv_obj_update_layout(menu);
     int32_t current = lv_obj_get_scroll_y(menu);
@@ -674,7 +793,7 @@ int aura_ui_menu_scroll_y(void)
 
 void aura_ui_power_short(void)
 {
-    if (power_hold_active) return;
+    if (power_hold_active || eclipse_intro_stage) return;
     if (sleeping) {
         aura_ui_sleep(0);
         aura_ui_page(0);
@@ -708,6 +827,7 @@ void aura_ui_power_release(void)
 void aura_ui_page(int page)
 {
     if (page < 0 || page >= PAGE_COUNT) return;
+    if (eclipse_intro_stage && page != 0) return;
     if (((page >= 6 && page <= 12) || page >= 15) && !eclipse_active) return;
     // Sleep keeps home selected; wake explicitly before changing visible pages.
     if (sleeping && page != 0) return;
@@ -725,6 +845,15 @@ void aura_ui_page(int page)
     for (int i = 0; i < PAGE_COUNT; ++i) {
         if (i == page) lv_obj_remove_flag(pages[i], LV_OBJ_FLAG_HIDDEN);
         else lv_obj_add_flag(pages[i], LV_OBJ_FLAG_HIDDEN);
+    }
+    if (page == 3 || page == 6) {
+        // Prebuilt menus must not retain either their offset or a scroll animation.
+        for (lv_indev_t *input = lv_indev_get_next(NULL); input; input = lv_indev_get_next(input)) {
+            if (lv_indev_get_type(input) == LV_INDEV_TYPE_POINTER &&
+                lv_indev_get_scroll_obj(input) == pages[page]) lv_indev_reset(input, pages[page]);
+        }
+        lv_obj_update_layout(pages[page]);
+        lv_obj_scroll_to(pages[page], 0, 0, LV_ANIM_OFF);
     }
     last_activity = now_us();
     update_timer_rates();
@@ -756,6 +885,7 @@ void aura_ui_sleep(int sleep)
     lock_tap_started = 0;
     tap_cancelled = true;
     if (sleeping) {
+        eclipse_intro_cancel();
         version_taps = 0;
         version_tap_until = 0;
         eclipse_pause_tools();
@@ -785,6 +915,7 @@ bool aura_ui_is_sleeping(void)
 
 int aura_ui_current_page(void) { return current_page; }
 bool aura_ui_eclipse_active(void) { return eclipse_active; }
+unsigned aura_ui_eclipse_intro_stage(void) { return eclipse_intro_stage; }
 
 void aura_ui_motion(float x, float y)
 {
@@ -813,7 +944,7 @@ void aura_ui_dizzy(void)
 static bool wake_only(void)
 {
     int64_t now = now_us();
-    if (sleeping || now < touch_wake_guard_until) return true;
+    if (sleeping || eclipse_intro_stage || now < touch_wake_guard_until) return true;
     last_activity = now;
     return false;
 }
@@ -829,6 +960,13 @@ static bool touch_point(lv_point_t *point)
 
 static void root_event(lv_event_t *e)
 {
+    if (eclipse_intro_stage) {
+        tap_cancelled = true;
+        lock_taps = 0;
+        lock_tap_started = 0;
+        sleep_tap_started = 0;
+        return;
+    }
     lv_event_code_t code = lv_event_get_code(e);
     if (code == LV_EVENT_PRESSED) {
         tap_cancelled = !touch_point(&tap_press_point) || power_hold_active || now_us() < touch_wake_guard_until;
@@ -853,9 +991,9 @@ static void root_event(lv_event_t *e)
     if (code == LV_EVENT_SHORT_CLICKED) {
         lv_obj_t *target = lv_event_get_target_obj(e);
         while (target && !lv_obj_has_flag(target, LV_OBJ_FLAG_CLICKABLE)) target = lv_obj_get_parent(target);
-        // Only backgrounds and Aura's face; controls keep their normal clicks.
-        bool background = target == lv_screen_active() || target == face;
-        for (int i = 0; i < PAGE_COUNT && !background; ++i) background = target == pages[i];
+        // Lock only on home backgrounds or Aura's face; never inside any menu/app.
+        bool background = current_page == 0 &&
+                          (target == lv_screen_active() || target == face || target == pages[0]);
         if (!background || tap_cancelled || sleeping || power_hold_active || now < touch_wake_guard_until) {
             lock_taps = 0;
             lock_tap_started = 0;
@@ -905,10 +1043,14 @@ static void root_event(lv_event_t *e)
 
 void aura_ui_diagnostic_tap(int x, int y, int target_kind)
 {
-    if (x < 0 || x >= UI_WIDTH || y < 0 || y >= 502 || target_kind < 0 || target_kind > 3) return;
+    if (x < 0 || x >= UI_WIDTH || y < 0 || y >= 502 || target_kind < 0 || target_kind > 4) return;
+    if (target_kind == 4 && !eclipse_intro_stage) return;
     lv_obj_t *target = target_kind == 1 ? brightness_slider :
                        target_kind == 2 ? version_target :
                        target_kind == 3 ? face : pages[current_page];
+    if (eclipse_intro_stage) target = eclipse_intro;
+    if (target_kind == 4 && eclipse_intro_stage == 2 && eclipse_intro_ok_ready)
+        target = eclipse_intro_ok;
     diagnostic_point = (lv_point_t){.x = x, .y = y};
     diagnostic_touch = true;
     lv_obj_send_event(target, LV_EVENT_PRESSED, NULL);
@@ -920,7 +1062,7 @@ void aura_ui_diagnostic_tap(int x, int y, int target_kind)
 
 void aura_ui_diagnostic_drag(int x, int y, int end_x, int end_y)
 {
-    lv_obj_t *target = current_page == 0 ? face : pages[current_page];
+    lv_obj_t *target = eclipse_intro_stage ? eclipse_intro : current_page == 0 ? face : pages[current_page];
     diagnostic_touch = true;
     diagnostic_point = (lv_point_t){.x = x, .y = y};
     lv_obj_send_event(target, LV_EVENT_PRESSED, NULL);
@@ -1003,9 +1145,10 @@ static void animate(lv_timer_t *t)
         lv_obj_add_flag(notice, LV_OBJ_FLAG_HIDDEN);
         notice_until = 0;
     }
+    eclipse_intro_tick(now);
     if (flashlight_active && now >= flashlight_until) aura_ui_page(3);
     if (!sleeping && now - last_activity > (int64_t)aura_idle_timeout() * 1000000) aura_ui_sleep(1);
-    if (sleeping || current_page != 0) return;
+    if (sleeping || eclipse_intro_stage || current_page != 0) return;
     if (!sleeping && !touching && mood != 5 && now > motion_until && now > next_gaze) {
         target_x = (int)(esp_random() % 29) - 14;
         target_y = (int)(esp_random() % 17) - 8;
@@ -1171,6 +1314,7 @@ static void tick(lv_timer_t *t)
         remaining_seconds = left > 0 ? (int)((left + 999999) / 1000000) : 0;
         if (!remaining_seconds) {
             timer_state = 3;
+            eclipse_intro_cancel();
             aura_ui_sleep(0);
             aura_ui_page(2);
         }
@@ -1694,7 +1838,9 @@ void aura_ui_init(void)
     lv_obj_t *version = box(pages[3], 28, 746, 354, 44, 0, 0);
     version_target = version;
     lv_obj_add_flag(version, LV_OBJ_FLAG_CLICKABLE);
-    lv_obj_t *version_text = label(version, "AURA Watch - Basic 1.4 dev.6",
+    char firmware_version[64];
+    snprintf(firmware_version, sizeof(firmware_version), "AURA Watch %s", esp_app_get_description()->version);
+    lv_obj_t *version_text = label(version, firmware_version,
                                   &lv_font_montserrat_14, MUTED, 0, 14);
     lv_obj_set_width(version_text, 354);
     lv_obj_set_style_text_align(version_text, LV_TEXT_ALIGN_CENTER, 0);
@@ -1724,7 +1870,7 @@ void aura_ui_init(void)
     button(pages[5], "Vuelta", 270, 278, 112, 60, stopwatch_click, 1);
     button(pages[5], LV_SYMBOL_REFRESH "  Reiniciar", 92, 338, 226, 48, stopwatch_click, -1);
 
-    /* Eclipse opens the prebuilt workspace immediately after its hidden gesture. */
+    /* Eclipse tools stay in this menu; hidden entry returns to Aura's home. */
     button(pages[6], LV_SYMBOL_LEFT, 28, 4, 54, 44, eclipse_home, 0);
     center_label(pages[6], "Aura Eclipse", &lv_font_montserrat_28, ECLIPSE_GREEN, 6);
     lv_obj_add_flag(pages[6], LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_SCROLL_MOMENTUM |
@@ -1857,6 +2003,24 @@ void aura_ui_init(void)
     lv_obj_set_style_bg_color(notice, lv_color_hex(INK), 0);
     lv_obj_set_style_bg_opa(notice, LV_OPA_COVER, 0);
     lv_obj_add_flag(notice, LV_OBJ_FLAG_HIDDEN);
+    eclipse_intro = box(screen, 0, 0, UI_WIDTH, 502, 0x000000, 0);
+    lv_obj_add_flag(eclipse_intro, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_HIDDEN);
+    lv_obj_add_event_cb(eclipse_intro, eclipse_intro_touch, LV_EVENT_ALL, NULL);
+    center_label(eclipse_intro, "AURA / ECLIPSE", &lv_font_montserrat_18, ECLIPSE_GREEN, 115);
+    eclipse_intro_title = center_label(eclipse_intro, "", &lv_font_montserrat_28, PAPER, 194);
+    eclipse_intro_detail = center_label(eclipse_intro, "", &lv_font_montserrat_18, ECLIPSE_GREEN, 251);
+    eclipse_intro_hint = center_label(eclipse_intro, "", &lv_font_montserrat_16, MUTED, 319);
+    lv_obj_set_style_text_line_space(eclipse_intro_hint, 8, 0);
+    eclipse_intro_ok = button(eclipse_intro, "OK", 115, 394, 180, 54, eclipse_intro_ok_event, 0);
+    lv_obj_add_event_cb(eclipse_intro_ok, eclipse_intro_ok_event, LV_EVENT_PRESSED, NULL);
+    lv_obj_add_event_cb(eclipse_intro_ok, eclipse_intro_ok_event, LV_EVENT_PRESS_LOST, NULL);
+    lv_obj_add_event_cb(eclipse_intro_ok, eclipse_intro_ok_event, LV_EVENT_SCROLL_BEGIN, NULL);
+    lv_obj_set_style_bg_color(eclipse_intro_ok, lv_color_hex(ECLIPSE_GREEN), 0);
+    lv_obj_set_style_bg_color(eclipse_intro_ok, lv_color_hex(0x3bb66c), LV_STATE_PRESSED);
+    lv_obj_set_style_bg_opa(eclipse_intro_ok, LV_OPA_40, LV_STATE_DISABLED);
+    lv_obj_set_style_text_color(lv_obj_get_child(eclipse_intro_ok, 0), lv_color_hex(INK), 0);
+    lv_obj_add_flag(eclipse_intro_ok, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_add_state(eclipse_intro_ok, LV_STATE_DISABLED);
     power_overlay = box(screen, 0, 0, 410, 502, 0x000000, 0);
     lv_obj_add_flag(power_overlay, LV_OBJ_FLAG_CLICKABLE);
     center_label(power_overlay, "PWR mantenido", &lv_font_montserrat_24, PAPER, 120);

@@ -53,7 +53,12 @@ foreach ($taskInputDir in @('main', 'components')) {
 }
 Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'sdkconfig.defaults') -Destination (Join-Path $taskStage 'sdkconfig')
 if (Test-Path (Join-Path $PSScriptRoot 'dependencies.lock')) {
-    Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'dependencies.lock') -Destination $taskStage
+    # The Windows component manager needs absolute local paths when loading a
+    # lock outside the repository. Keep the portable relative form in the repo.
+    $taskStagedLock = Get-Content -LiteralPath (Join-Path $PSScriptRoot 'dependencies.lock') -Raw
+    $taskStagedLock = $taskStagedLock -replace '(?m)^      path: components[/\\](waveshare__[^\r\n]+)\r?$',
+        ('      path: ' + ($taskStage -replace '\\', '/') + '/components/$1')
+    Set-Content -LiteralPath (Join-Path $taskStage 'dependencies.lock') -Value $taskStagedLock -NoNewline -Encoding utf8
 }
 
 $taskNinja = (Get-ChildItem (Join-Path $ToolsPath 'tools') -Recurse -File -Filter 'ninja.exe' | Select-Object -First 1).FullName

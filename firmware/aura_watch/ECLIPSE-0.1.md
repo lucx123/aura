@@ -1,14 +1,24 @@
 # AURA Eclipse 0.1
 
 Modo hacker local con ocho herramientas de redes, RF, VLSM y diagnostico.
-Siete toques en la version abren el menu sin clave. Volver al reloj, usar apps
+Siete toques en la version muestran una introduccion y llegan al inicio con
+Eclipse activo, sin clave. Volver al reloj, usar apps
 basicas o descansar conserva la sesion; "Salir de Eclipse" la termina.
 
-Basic 1.4 dev.6 reutiliza las tarjetas del menu, evita invalidaciones innecesarias
+Basic 1.4 dev.8 agrega **OK** a la confirmacion de entrada. Al pulsarlo vuelves
+al inicio con Eclipse activo; si no lo pulsas, avanza sola tras cuatro segundos.
+La correccion de dev.7 reinicia ambos menus arriba al abrirlos.
+El triple toque bloquea solamente desde la pantalla principal. La introduccion
+captura taps sobrantes y espera que termine el contacto antes de retirarse.
+Las pruebas de esta correccion estan en
+[`AUDIT-2026-10-03-dev8.md`](AUDIT-2026-10-03-dev8.md), con los antecedentes en
+[`AUDIT-2026-10-03-dev7.md`](AUDIT-2026-10-03-dev7.md).
+
+Se conservan las mejoras de dev.6: reutiliza las tarjetas del menu, evita invalidaciones innecesarias
 y conserva el descanso incluso si cambian estilos ocultos. Evidence identifica
 el formato de la tarjeta y dispone de un registro interno persistente cuando
 la escritura SD falla. La tarjeta de esta sesion es NTFS, de 31,9 GB.
-La auditoria actual esta en [`AUDIT-2026-10-03.md`](AUDIT-2026-10-03.md).
+La auditoria de dev.6 esta en [`AUDIT-2026-10-03.md`](AUDIT-2026-10-03.md).
 Los antecedentes de dev.2 a dev.5 estan en
 [`AUDIT-2026-10-02.md`](AUDIT-2026-10-02.md).
 
@@ -26,7 +36,17 @@ se vea el inicio, una app basica o la pantalla este apagada.
 
 1. En modo normal, abre Centro Aura con un toque corto en PWR.
 2. Busca la version y tocala siete veces dentro de cinco segundos.
-3. Eclipse se abre de inmediato. Elige una de sus herramientas.
+3. Aparece "Que estas haciendo?" durante 1,4 segundos.
+4. Aparece "Entraste a Eclipse", la version y un boton **OK**.
+5. Pulsa **OK** para avanzar. Si no lo pulsas, avanza sola tras cuatro segundos.
+6. Vuelves a la pantalla principal con Eclipse activo. PWR abre su menu,
+   siempre desde arriba.
+
+OK se habilita despues de liberar el dedo y dejar 600 ms sin contacto desde los
+taps de entrada. El avance automatico tambien espera que termine el contacto.
+Los taps adicionales no pulsan controles de la
+pantalla siguiente ni cuentan como triple toque para bloquear. Una alarma del
+temporizador interrumpe la introduccion para mostrar su pagina.
 
 No hay formulario de password, creacion de PIN ni confirmacion de acceso.
 El gesto mantiene Eclipse fuera de la navegacion cotidiana; cualquiera con
@@ -38,14 +58,14 @@ PWR desde el inicio abre Eclipse y desde una herramienta vuelve a su menu.
 La flecha superior del menu y PWR desde ese menu regresan al inicio conservando
 el modo. El boton inferior "Salir de Eclipse" lo cierra y restaura Aura normal.
 
-### Navegacion y descanso en dev.4
+### Navegacion y descanso
 
 | Accion | Resultado |
 | --- | --- |
 | Volver al inicio o usar una app basica | Eclipse y la cache siguen activos; se cancelan trabajos pendientes |
-| Descansar con PWR, triple toque o descanso automatico | Panel apagado, modo y cache conservados; herramientas pausadas |
+| Descansar con PWR, triple toque en la pantalla principal o descanso automatico | Panel apagado, modo y cache conservados; herramientas pausadas |
 | Despertar | Inicio hacker, sin reanudar trabajos automaticamente |
-| Volver al menu de Eclipse | Misma sesion y resultados, sin volver a activar el modo |
+| Volver al menu de Eclipse | Menu arriba, misma sesion y resultados, sin volver a activar el modo |
 | "Salir de Eclipse" o `ECLIPSE_CLOSE` | Modo normal y cache de Eclipse borrada |
 | Reiniciar o apagar y encender el reloj | Arranque en modo normal; Eclipse no se persiste |
 
@@ -183,7 +203,8 @@ para los informes de dev.5.
 
 - Apagar la pantalla, volver al inicio o usar una app basica conserva el modo
   Eclipse y su cache, y cancela los trabajos pendientes de sus herramientas.
-- Tres toques rapidos sobre el fondo apagan la pantalla mediante el mismo flujo
+- Tres toques rapidos sobre el fondo o la cara de Aura en la pantalla principal
+  apagan la pantalla mediante el mismo flujo
   de descanso. Al despertar se conserva el modo y no se reanudan trabajos solos.
 - Reiniciar siempre vuelve a AURA normal.
 - PWR desde una herramienta vuelve al menu de Eclipse; desde su menu vuelve al

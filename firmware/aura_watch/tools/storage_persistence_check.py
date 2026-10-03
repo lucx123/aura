@@ -21,6 +21,7 @@ def main():
         assert after['internal_records']==sequence and after['internal_count']==str(len(baseline.splitlines())),after
         assert after['internal_verified']=='0', 'This check must run before any new record in the current boot'
         watch.send('WAKE');watch.send('PAGE 3');watch.send('BOOT_LONG')
+        watch.wait_eclipse_ready()
         path,count=watch.evidence_export(pathlib.Path(args.output).with_suffix('.jsonl'))
         assert path.read_bytes()==baseline,'Persistent records changed after reset'
         result={'result':'PASS','version':watch.display()['version'],'storage':after,

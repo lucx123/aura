@@ -1,4 +1,5 @@
 """Bundle reproducible source and app image; exclude NVS backups and network captures."""
+import argparse
 import hashlib
 import json
 import pathlib
@@ -9,6 +10,12 @@ import zipfile
 def main():
     root = pathlib.Path(__file__).resolve().parents[1]
     build = root / 'build'
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--verification-dir', type=pathlib.Path, default=build)
+    args = parser.parse_args()
+    verification = args.verification_dir.resolve()
+    if not verification.is_relative_to(build.resolve()):
+        parser.error('Verification directory must be inside this firmware build directory')
     version = re.search(r'set\(PROJECT_VER\s+"([^"]+)"\)',
                         (root / 'CMakeLists.txt').read_text()).group(1)
     hashes = json.loads((build / 'sha256.json').read_text(encoding='utf-8-sig'))
@@ -16,7 +23,8 @@ def main():
     assert actual == hashes['aura_watch.bin'], 'Build hash mismatch'
     files = [root / name for name in ('CMakeLists.txt', 'build-local.ps1',
         'dependencies.lock', 'sdkconfig.defaults', 'partitions.csv',
-        'README.md', 'BASIC-1.0.md', 'ECLIPSE-0.1.md', 'AUDIT-2026-10-02.md', 'AUDIT-2026-10-03.md')]
+        'README.md', 'BASIC-1.0.md', 'ECLIPSE-0.1.md', 'AUDIT-2026-10-02.md', 'AUDIT-2026-10-03.md',
+        'AUDIT-2026-10-03-dev7.md', 'AUDIT-2026-10-03-dev8.md')]
     for directory in ('main', 'components', 'tools', 'tests'):
         files.extend(p for p in (root / directory).rglob('*')
                      if p.is_file() and '__pycache__' not in p.parts)
@@ -24,7 +32,8 @@ def main():
                'gesture-check.json', 'eclipse-navigation-check.json', 'engineer-check.json',
                'storage-check.json', 'storage-persistence-check.json', 'sleep-check.json',
                'scroll-benchmark.json', 'scroll-benchmark-33.json', 'scroll-benchmark-25.json',
-               'menu-cache-check.json', 'idle-check.json', 'release-previews.json', 'host-verification.json')
+               'menu-cache-check.json', 'idle-check.json', 'release-previews.json', 'host-verification.json',
+               'eclipse-entry-check.json', 'build-verification.json')
     output = build / f'aura-watch-{version}.zip'
     with zipfile.ZipFile(output, 'w', compression=zipfile.ZIP_DEFLATED) as bundle:
         for path in sorted(files):
@@ -32,12 +41,13 @@ def main():
         bundle.write(build / 'aura_watch.bin', 'firmware/aura_watch.bin')
         bundle.writestr('firmware/sha256.json', json.dumps({'aura_watch.bin': actual}, indent=2)+'\n')
         for name in reports:
-            if (build / name).is_file(): bundle.write(build / name, 'verification/' + name)
-        if (build/'portal-expiry-check.json').is_file():
-            bundle.write(build/'portal-expiry-check.json','verification/legacy/portal-expiry-check.json')
+            if (verification / name).is_file(): bundle.write(verification / name, 'verification/' + name)
+        if (verification/'portal-expiry-check.json').is_file():
+            bundle.write(verification/'portal-expiry-check.json','verification/legacy/portal-expiry-check.json')
         for name in ('menu-top.png', 'menu-bottom.png', 'battery.png', 'cidr.png', 'eclipse.png',
-                     'eclipse-bottom.png', 'home-hacker.png', 'rf.png', 'vlsm.png', 'engineer-keyboard.png', 'evidence.png'):
-            if (build / name).is_file(): bundle.write(build / name, 'preview/' + name)
+                     'eclipse-bottom.png', 'home-hacker.png', 'rf.png', 'vlsm.png', 'engineer-keyboard.png', 'evidence.png',
+                     'eclipse-question.png', 'eclipse-confirmation.png', 'eclipse-home.png'):
+            if (verification / name).is_file(): bundle.write(verification / name, 'preview/' + name)
         bundle.writestr('LEEME.txt', f'''AURA Watch {version}
 Placa: Waveshare ESP32-S3-Touch-AMOLED-2.06, inicializacion QSPI SH8601 local.
 Imagen de aplicacion: firmware/aura_watch.bin
@@ -48,7 +58,7 @@ python -m esptool --chip esp32s3 --port COM4 --baud 921600 write_flash 0x10000 f
 El puerto puede cambiar. Este paquete no cambia bootloader ni particiones.
 Conserva tus respaldos originales por separado.
 
-Fuente y documentacion: source/README.md y source/AUDIT-2026-10-03.md
+Fuente y documentacion: source/README.md y source/AUDIT-2026-10-03-dev8.md
 Version de desarrollo. La fluidez tactil y autonomia requieren pruebas directas.
 La tarjeta conectada es NTFS: Evidence usa un registro interno verificado.
 FAT32/exFAT se probaron en imagenes sinteticas, no en una tarjeta fisica.
