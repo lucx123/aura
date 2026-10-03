@@ -49,6 +49,18 @@ AURA. Todos comparten personalidad, memoria, conversaciones, permisos y contexto
 El gateway evita acoplar firmware y aplicaciones a Hermes, OpenClaw o cualquier
 orquestador concreto. Cambiar el cerebro no debe obligar a reprogramar cada nodo.
 
+### Operación y recuperación confirmadas (2026-10-03)
+
+EC2 será el único nodo activo normal, con servicios contenerizados. El notebook
+de respaldo permanecerá apagado y se encenderá manualmente si EC2 cae. No habrá
+standby 24/7, sincronización continua entre hosts ni conmutación automática.
+La recuperación usará respaldos externos a EC2 y un cambio controlado del servidor
+al que se conectan los dispositivos. Al volver a EC2 se transferirá el estado
+actualizado y se mantendrá un solo despliegue activo.
+
+Ver [procedimiento de recuperación manual](../research/07-arquitectura-failover.md)
+y [propuesta de gateway y agentes](../research/09-gateway-agentes-paperclip-kiro.md).
+
 ## AURA Watch
 
 El reloj sera la primera presencia fisica portatil de AURA. Usara una **Waveshare
@@ -197,11 +209,18 @@ deben generar un registro auditable con origen, herramienta, resultado y nodo.
 
 ## Modelos y canales
 
-El orquestador actual puede ser Hermes, pero se considera reemplazable por OpenClaw
-u otra solucion. AURA Gateway ofrece un contrato estable a los nodos.
+La primera implementación usará Hermes mediante API HTTP y streaming SSE.
+OpenClaw será una alternativa mediante su protocolo WebSocket. AURA Gateway
+ofrece un contrato estable a los nodos y cada conversación tiene un motor responsable.
+Estos adaptadores están acordados, pero todavía no implementados.
 
-- **Claude** se consume mediante Amazon Bedrock.
-- **Gemini** se consume mediante Google AI o Vertex AI como proveedor alternativo.
+- **Personal:** Hermes con Gemini API y su cuota/facturación personal.
+- **Trabajo:** worker Kiro CLI con los especialistas existentes del IDE y la
+  suscripción laboral. Validar identidad, dependencias y consumo antes del despliegue.
+- **Consumo y datos:** memoria, sesiones, credenciales y almacenamiento separados
+  por dominio. El trabajo no pasa por Gemini para clasificar o resumir por defecto.
+- **Bedrock:** antecedente del stack anterior; no es el proveedor elegido para
+  la primera implementación personal acordada.
 - WhatsApp, Telegram, Discord, email y futuras integraciones usan adaptadores de
   canal y comparten identidad de sesion cuando sea apropiado.
 

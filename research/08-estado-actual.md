@@ -1,4 +1,35 @@
-# Estado Actual de AURA - 2026-08-25
+# Estado de AURA — actualizado 2026-10-03
+
+## Decisiones actuales y próximos pasos
+
+Diseño acordado, todavía sin despliegue de estos cambios:
+
+- AURA Gateway propio para app/reloj, con identidad, sesiones, permisos y eventos.
+- Hermes primero mediante API HTTP/SSE, con Gemini para uso personal.
+- Adaptador OpenClaw por WebSocket como alternativa, pendiente de validación.
+- Worker Kiro CLI independiente para agentes laborales existentes del IDE,
+  usando la suscripción laboral y verificando identidad y consumo.
+- Memoria, sesiones, credenciales y almacenamiento separados por dominio.
+- Docker Compose en EC2 como único despliegue activo normal.
+- Notebook apagado como respaldo; recuperación manual, sin watchdog ni
+  sincronización continua. Backups fuera de EC2 y retorno manual con estado actualizado.
+- Git privado para instrucciones/memoria curada y backups cifrados para estado operativo.
+- Paperclip en una segunda etapa para coordinación de proyectos.
+- Tres consumos separados: AWS (aprox. US$30 mensuales en créditos reportados),
+  Gemini personal y suscripción laboral Kiro.
+
+Primeras validaciones: inventario de agentes Kiro y dependencias; tarea de lectura
+con CLI y medición de créditos; conversación Hermes/Gemini; gateway mínimo por texto;
+prueba de separación de dominios y restauración en el notebook; integración del Watch.
+
+Ver [estudio y contrato de integración](09-gateway-agentes-paperclip-kiro.md)
+y [recuperación manual](07-arquitectura-failover.md).
+
+## Registro histórico — 2026-08-25
+
+La información siguiente se conserva como antecedente de esa fecha. El estado de
+EC2, versiones, credenciales y costos no se volvió a verificar en esta revisión.
+Las decisiones anteriores que contradigan las actuales quedan reemplazadas.
 
 ## Infraestructura Activa
 
@@ -17,7 +48,7 @@
 
 ### Prioridad Alta
 - [ ] Configurar skill de WhatsApp (cuando tenga telefono + SIM)
-- [ ] Watchdog en laptop para failover
+- [ ] Recuperación manual en notebook (reemplaza la propuesta histórica de watchdog)
 - [ ] Probar memoria a largo plazo (que Aura recuerde cosas entre sesiones)
 
 ### Prioridad Media

@@ -1,205 +1,73 @@
-# Arquitectura Failover: EC2 + Laptop
+# Recuperación manual de AURA: EC2 y notebook de respaldo
 
-## Concepto
+Actualizado: 2026-10-03. Estado: diseño pendiente de implementación y pruebas.
 
-EC2 es el nodo primario (24/7). Laptop es nodo secundario (failover).
-Memoria sincronizada via Git. Si EC2 cae, laptop toma el control automaticamente.
+Este documento reemplaza la propuesta anterior de failover automático.
+El usuario confirmó que el notebook no estará encendido 24/7.
 
----
+## Funcionamiento normal
 
-## Arquitectura
+EC2 es el único nodo activo. Ejecuta AURA Gateway, el motor personal y los
+workers laborales autorizados mediante Docker Compose. El notebook puede
+conservar el código y las herramientas de restauración, pero permanece apagado;
+no monitorea EC2 ni sincroniza estado continuamente.
 
-```
-                    ┌─────────────┐
-                    │  GitHub Repo │
-                    │  (memoria)   │
-                    └──────┬──────┘
-                           │
-              ┌────────────┼────────────┐
-              │            │            │
-              ▼            │            ▼
-┌──────────────────┐       │  ┌──────────────────┐
-│   EC2 (PRIMARY)  │       │  │ Laptop (STANDBY) │
-│                  │       │  │                  │
-│  Hermes Agent    │       │  │  Hermes Agent    │
-│  Puerto 8000     │       │  │  Puerto 8000     │
-│                  │       │  │                  │
-│  Health: /health │       │  │  Monitorea EC2   │
-│                  │       │  │  cada 60s        │
-│  git push cada   │       │  │                  │
-│  15 min          │       │  │  Si EC2 muere:   │
-│                  │       │  │  → git pull      │
-│                  │       │  │  → hermes start  │
-│                  │       │  │  → toma canales  │
-└──────────────────┘       │  └──────────────────┘
-                           │
-                    ┌──────┴──────┐
-                    │   Canales   │
-                    │  WhatsApp   │
-                    │  Telegram   │
-                    │  Email      │
-                    └─────────────┘
-```
+Los respaldos se generan desde EC2 y se guardan fuera de esa instancia. Su
+frecuencia, retención y destino se definirán al implementar. No requieren que
+el notebook esté encendido.
 
----
+## Qué respaldar
 
-## Flujo de Failover
+- Git privado: código, Compose, instrucciones, agentes, skills y memoria curada
+  permitida, con accesos separados para personal y trabajo.
+- Backup cifrado y consistente: bases de datos, sesiones necesarias, tareas,
+  artefactos y estado de coordinación si se incorpora Paperclip.
+- Secretos: provisionarlos mediante un canal separado; no almacenarlos en Git.
 
-### Estado normal (EC2 activo):
-1. EC2 corre Hermes, atiende todos los canales
-2. Cada 15 min: git push de memoria
-3. Laptop (si esta prendida): monitorea EC2 con health check cada 60s
-4. Laptop: git pull cada 15 min para mantener memoria al dia
+Git por sí solo no conserva todo el estado operativo. No copiar bases de datos
+activas sin su procedimiento de backup. El respaldo debe poder recuperarse
+sin depender de que EC2 esté disponible.
 
-### Fallo detectado:
-1. Laptop hace GET a `http://18.204.38.227:8000/health`
-2. Si falla 3 veces consecutivas (3 min sin respuesta):
-   - `git pull` para traer ultima memoria
-   - Inicia Hermes local
-   - Reconecta canales (WhatsApp, Telegram)
-   - Envia alerta por Telegram admin: "EC2 caida, laptop tomando control"
+## Cuando EC2 cae
 
-### Recuperacion:
-1. EC2 vuelve online
-2. Laptop detecta que EC2 responde health check
-3. Laptop hace `git push` de cualquier memoria nueva
-4. Laptop apaga su Hermes local
-5. EC2 hace `git pull` y retoma canales
-6. Alerta Telegram: "EC2 recuperada, control devuelto"
+1. AURA queda desconectada hasta que el usuario active el respaldo.
+2. El usuario enciende el notebook y confirma la caída o detiene el despliegue
+   original para evitar dos instancias ejecutando las mismas tareas/canales.
+3. Descarga el último backup válido y obtiene la versión compatible del código
+   y de las imágenes de contenedor.
+4. Restaura volúmenes/datos y configura credenciales y conectividad.
+5. Arranca Docker Compose y comprueba estado, permisos y acceso a los proveedores.
+6. Cambia la conexión de la app/reloj al notebook mediante configuración de
+   servidor o un nombre estable cuya ruta se pueda modificar. El mecanismo
+   concreto y el acceso remoto al notebook quedan pendientes de implementar.
+7. Revisa tareas interrumpidas y reanuda solo las que puedan ejecutarse sin
+   duplicar efectos. La app conserva pendientes válidos y descarta los vencidos.
 
----
+El despliegue en EC2 debe permanecer detenido o deshabilitado durante esta
+recuperación. Si EC2 vuelve por sí sola, no se realiza retorno automático.
 
-## Script de Monitor (laptop)
+## Volver a EC2
 
-```python
-#!/usr/bin/env python3
-"""
-aura_watchdog.py - Corre en la laptop como servicio/tarea programada.
-Monitorea EC2 y toma control si cae.
-"""
-import time
-import subprocess
-import httpx
-from pathlib import Path
+1. Pausar la entrada de nuevas tareas y reconciliar las que estén en curso.
+2. Crear un backup consistente del estado actualizado en el notebook.
+3. Detener el despliegue del notebook y restaurar ese estado en EC2.
+4. Arrancar y comprobar EC2; devolver a ella la conexión de los dispositivos.
+5. Apagar el notebook después de verificar que el servicio se recuperó.
 
-EC2_URL = "http://18.204.38.227:8000/health"
-CHECK_INTERVAL = 60  # segundos
-FAIL_THRESHOLD = 3   # fallos consecutivos antes de failover
-MEMORY_REPO = Path.home() / "aura-memory"
-HERMES_CMD = "hermes gateway start"
+Hay un solo despliegue activo en cada momento. Se conserva el estado actualizado
+por transferencia manual, sin sincronización continua entre hosts.
 
-consecutive_failures = 0
-is_primary = False  # laptop es primary?
+## Límites y validación
 
+La pérdida potencial de datos corresponde al intervalo desde el último backup
+completado. El tiempo de recuperación incluye encender el notebook, restaurar,
+configurar la conexión y verificar el servicio. No se promete disponibilidad
+ininterrumpida ni un tiempo de recuperación hasta medir el procedimiento.
 
-def check_ec2():
-    try:
-        r = httpx.get(EC2_URL, timeout=10)
-        return r.status_code == 200
-    except Exception:
-        return False
+Prueba mínima: restaurar un respaldo en el notebook, consultar una sesión,
+comprobar la separación personal/laboral, recuperar una tarea pendiente,
+verificar que no se duplica una acción y ensayar el retorno a EC2.
 
-
-def git_sync(direction="pull"):
-    subprocess.run(["git", direction], cwd=MEMORY_REPO, capture_output=True)
-
-
-def start_hermes_local():
-    global is_primary
-    git_sync("pull")
-    subprocess.Popen(HERMES_CMD, shell=True)
-    is_primary = True
-    notify("EC2 caida. Laptop tomando control de AURA.")
-
-
-def stop_hermes_local():
-    global is_primary
-    git_sync("push")
-    subprocess.run(["hermes", "gateway", "stop"], capture_output=True)
-    is_primary = False
-    notify("EC2 recuperada. Devolviendo control.")
-
-
-def notify(msg):
-    # Enviar por Telegram bot
-    pass
-
-
-def main():
-    global consecutive_failures
-    while True:
-        if check_ec2():
-            consecutive_failures = 0
-            if is_primary:
-                stop_hermes_local()
-        else:
-            consecutive_failures += 1
-            if consecutive_failures >= FAIL_THRESHOLD and not is_primary:
-                start_hermes_local()
-        
-        time.sleep(CHECK_INTERVAL)
-
-
-if __name__ == "__main__":
-    main()
-```
-
----
-
-## Sync de Memoria - Detalle
-
-### Que se sincroniza:
-```
-~/.hermes/
-├── memory/          → Git (SIEMPRE sync)
-│   ├── USER.md      # Perfil del usuario
-│   ├── MEMORY.md    # Memorias aprendidas
-│   └── sessions/    # Resumenes de sesiones
-├── skills/          → Git (SIEMPRE sync)
-│   └── *.py         # Skills auto-generados
-├── config/          → Git (solo configs no-sensibles)
-│   ├── SOUL.md      # Personalidad AURA
-│   └── tools.yaml   # Tools habilitados
-└── secrets/         → NO sync (API keys, tokens)
-    └── .env
-```
-
-### Cron en EC2:
-```bash
-# /etc/cron.d/aura-memory-sync
-*/15 * * * * ubuntu cd /home/ubuntu/.hermes && git add memory/ skills/ config/ && git commit -m "sync $(date +\%H:\%M)" --allow-empty -q && git push -q 2>/dev/null
-```
-
-### En laptop (Windows Task Scheduler o cron WSL):
-```bash
-# Cada 15 min cuando esta prendida
-cd ~/aura-memory && git pull -q
-```
-
----
-
-## Consideraciones
-
-### WhatsApp (Baileys):
-- Solo UNA sesion activa a la vez
-- Cuando laptop toma control, reconecta Baileys con la misma sesion
-- La sesion de WhatsApp Web se almacena en el telefono viejo, no en EC2/laptop
-- Ambos nodos pueden conectarse al telefono viejo via Baileys
-
-### Telegram Bot:
-- Solo UN polling activo a la vez
-- Webhook apunta a EC2. Si laptop toma control, cambiar webhook a Tailscale IP de laptop
-- O usar polling (long-poll) que es mas simple para failover
-
-### DNS/IP:
-- Usar Tailscale para que ambos nodos tengan IP fija en red privada
-- O un DNS dinamico que apunte al nodo activo
-
----
-
-## Costos adicionales: $0
-
-- Git repo privado: gratis (GitHub)
-- Tailscale: gratis (hasta 100 dispositivos)
-- Monitor en laptop: solo corre cuando esta prendida
-- Sin servicios extra de AWS
+Todavía no se configuraron backups, Docker, rutas de conexión ni automatizaciones.
+El costo del almacenamiento y las transferencias se incluirá en el presupuesto;
+no se presupone costo adicional cero.

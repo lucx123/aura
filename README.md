@@ -86,6 +86,41 @@ La arquitectura definitiva todavia esta en investigacion. Los documentos del
 repositorio registran las alternativas consideradas y las decisiones a medida que
 se validan.
 
+### Decisiones acordadas — 2026-10-03
+
+La primera integración tendrá un **AURA Gateway propio y pequeño** para la app y
+el reloj, con adaptadores que permitan cambiar el motor sin modificar su protocolo.
+**Hermes será el primer motor**, conectado mediante API HTTP y streaming SSE.
+**OpenClaw será una alternativa**, mediante su protocolo WebSocket. Su compatibilidad
+se validará antes de habilitarlo; cada conversación tendrá un motor responsable.
+
+```text
+Watch / app → AURA Gateway
+                 ├─ Personal → Hermes + Gemini API
+                 └─ Trabajo  → Kiro CLI + especialistas existentes
+```
+
+- **Consumo separado:** Gemini personal, créditos de la suscripción laboral Kiro
+  y recursos AWS se contabilizan por separado. El trabajo se dirige a Kiro sin
+  llamadas a Gemini para planificar o resumir por defecto.
+- **Datos separados:** memoria, sesiones, credenciales, herramientas y almacenamiento
+  independientes para personal y trabajo.
+- **Infraestructura:** servicios contenerizados en EC2, único nodo activo normal.
+  El notebook de respaldo estará apagado y se encenderá para una recuperación manual.
+- **Respaldo:** Git privado para instrucciones y memoria curada; backups cifrados
+  externos a EC2 para bases de datos, sesiones y tareas. La restauración y el retorno
+  a EC2 mantendrán un solo despliegue activo.
+- **Especialistas:** reutilizar primero un agente local de Kiro IDE mediante CLI.
+  Paperclip se evaluará después para coordinar proyectos y varios agentes.
+
+Estas son **decisiones de diseño, pendientes de implementación**. El siguiente paso
+es validar un agente Kiro con la suscripción laboral y Hermes con Gemini; después,
+implementar el gateway mínimo por texto y conectar progresivamente el reloj.
+
+Ver [gateway, APIs, agentes y consumo](research/09-gateway-agentes-paperclip-kiro.md),
+[recuperación manual](research/07-arquitectura-failover.md) y
+[estado actual e histórico](research/08-estado-actual.md).
+
 ## Estado actual
 
 ### AURA Watch — firmware funcional antes de integrar IA

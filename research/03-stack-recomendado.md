@@ -1,16 +1,23 @@
 # Stack Recomendado para AURA
 
-Basado en investigacion de 12+ proyectos similares.
+Actualizado: 2026-10-03. Las decisiones actuales se detallan en
+[gateway y agentes](09-gateway-agentes-paperclip-kiro.md).
+Las opciones de voz, memoria y costos más abajo son antecedentes por validar;
+no constituyen dependencias instaladas ni precios actuales comprobados.
 
 ---
 
-## Stack Final Propuesto
+## Stack inicial propuesto
 
 | Capa | Herramienta | Alternativa/Backup | Razon |
 |------|-------------|-------------------|-------|
 | **Orquestador** | Hermes (registrado en EC2) | OpenClaw u otro | Reemplazable mediante adaptador |
-| **Cerebro** | Claude Sonnet (Bedrock) | Gemini Pro | Conversacion principal |
-| **Heavy thinking** | Claude Opus (Bedrock) | - | Solo cuando es necesario |
+| **Gateway propio** | Python FastAPI + API estable para app/reloj | - | Dispositivos, permisos, sesiones y eventos |
+| **Adaptador Hermes** | API HTTP + streaming SSE | - | Primer motor a validar con Gemini |
+| **Adaptador OpenClaw** | Protocolo WebSocket | - | Alternativa a validar, un motor por conversación |
+| **Modelo personal** | Gemini API | Por definir | Cuota y facturación personal separadas |
+| **Trabajo** | Kiro CLI + agentes existentes | ACP tras validación | Créditos de la suscripción laboral mediante autenticación Kiro |
+| **Coordinación de proyectos** | Paperclip en segunda etapa | - | Incorporar cuando varias tareas/agentes lo requieran |
 | **STT** | RealtimeSTT (faster_whisper) | Deepgram API | Local, gratis, buena calidad |
 | **Wake Word** | Porcupine (via RealtimeSTT) | OpenWakeWord | Integrado, custom wake word |
 | **VAD** | Silero VAD (via RealtimeSTT) | WebRTC VAD | Mejor accuracy |
@@ -30,8 +37,9 @@ Basado en investigacion de 12+ proyectos similares.
 | **Watch enlace directo** | Wi-Fi + WebSocket | MQTT | Audio, eventos, OTA y gateway directo |
 | **AURA Desktop** | Por definir | ESP32-S3/RPi | Robot futuro con vision y movimiento |
 | **Backend** | Python FastAPI | - | Async, rapido, ecosystem ML |
-| **Infra** | EC2 t3.small + Docker | Laptop local | Tailscale VPN entre ambos |
-| **CI/CD** | GitHub Actions | - | Auto-deploy on push |
+| **Infra** | EC2 existente + Docker Compose | Notebook apagado | Recuperación manual desde backup, sin standby continuo |
+| **Backups** | Git privado + respaldo cifrado externo | - | Memoria curada y estado operativo por separado |
+| **CI/CD** | Por implementar | GitHub Actions por evaluar | Publicar documentación no despliega el backend |
 
 ---
 
@@ -86,7 +94,12 @@ Por prioridad para AURA:
 
 ---
 
-## Costos Estimados Mensuales
+## Estimaciones históricas de costos — pendientes de reemplazar
+
+Las cifras siguientes pertenecen al stack anterior. El presupuesto actual de
+referencia es aproximadamente US$30 mensuales en créditos AWS reportados por el
+usuario. Medir por separado infraestructura AWS, consumo personal Gemini y
+créditos laborales Kiro antes de fijar un presupuesto operativo.
 
 ### Fase MVP (solo voz + conversacion)
 | Item | Costo |
